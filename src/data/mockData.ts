@@ -1,0 +1,855 @@
+import { ResidentProfile, CredentialDocument, MoonlightingShift, HospitalFacility, Application } from '../types';
+
+export const SOCAL_RESIDENCY_PROGRAMS = [
+  'Keck School of Medicine of USC / LA General',
+  'UCLA Emergency Medicine (Ronald Reagan/Olive View)',
+  'Harbor-UCLA Medical Center',
+  'Cedars-Sinai Medical Center',
+  'UC Irvine Health (UCI)',
+  'UC San Diego Health (UCSD)',
+  'Loma Linda University Health',
+  'Kaiser Permanente Southern California (Los Angeles)',
+  'Kaiser Permanente Southern California (Fontana / Ontario)',
+  'Kaiser Permanente Southern California (Orange County)',
+  'Kaiser Permanente San Diego',
+  'Huntington Hospital (Pasadena)',
+  'Arrowhead Regional Medical Center',
+  'Children\'s Hospital Los Angeles (CHLA)',
+  'Children\'s Hospital of Orange County (CHOC)',
+  'Cottage Health (Santa Barbara)',
+  'Eisenhower Health (Rancho Mirage)',
+  'Kern Medical Center (Bakersfield)',
+  'Providence Saint John\'s Health Center (Santa Monica)',
+  'Rady Children\'s Hospital San Diego',
+  'Scripps Health (San Diego)',
+  'St. Mary Medical Center (Long Beach)',
+  'Torrance Memorial Medical Center',
+  'Ventura County Medical Center',
+  'White Memorial Medical Center (Los Angeles)',
+];
+
+export const INITIAL_DOCUMENTS: CredentialDocument[] = [
+  {
+    id: 'pd_letter',
+    name: 'Program Director (PD) Moonlighting Approval Letter',
+    category: 'institutional',
+    requiredForTier1: true,
+    status: 'verified',
+    fileUrl: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=500&auto=format&fit=crop&q=60',
+    fileName: 'PD_GoodStanding_Moonlighting_Approval_2026.pdf',
+    uploadDate: '2026-07-01',
+    expirationDate: '2027-06-30',
+    issuer: 'UCLA Health - Dept of Internal Medicine',
+    docNumber: 'PD-UCLA-2026-894',
+    notes: 'Signed by Dr. Robert Vance, MD (Internal Medicine Program Director). Confirms PGY-2 standing & duty hour limit compliance.'
+  },
+  {
+    id: 'state_license',
+    name: 'Full / Limited State Medical License',
+    category: 'licensing',
+    requiredForTier1: true,
+    status: 'verified',
+    fileUrl: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=500&auto=format&fit=crop&q=60',
+    fileName: 'CA_Medical_License_2026.pdf',
+    uploadDate: '2026-06-15',
+    expirationDate: '2027-12-31',
+    issuer: 'Medical Board of California',
+    docNumber: 'CA-C192840-MED',
+    notes: 'Active Full Physician & Surgeon License issued for PGY-2 moonlighting eligibility.'
+  },
+  {
+    id: 'npi_verification',
+    name: 'NPI (National Provider Identifier) Registration',
+    category: 'licensing',
+    requiredForTier1: true,
+    status: 'verified',
+    fileName: 'NPI_Enumeration_Confirmation.pdf',
+    uploadDate: '2025-07-01',
+    issuer: 'CMS NPPES Registry',
+    docNumber: '1942850192',
+    notes: 'Taxonomy Code: 207R00000X (Internal Medicine)'
+  },
+  {
+    id: 'dea_certificate',
+    name: 'Federal DEA Registration Certificate',
+    category: 'licensing',
+    requiredForTier1: true,
+    status: 'verified',
+    fileName: 'DEA_Registration_2026.pdf',
+    uploadDate: '2026-05-10',
+    expirationDate: '2029-05-10',
+    issuer: 'U.S. Drug Enforcement Administration',
+    docNumber: 'BM1948291',
+    notes: 'Schedules II-V Prescriptive Authority'
+  },
+  {
+    id: 'acls_card',
+    name: 'Advanced Cardiovascular Life Support (ACLS)',
+    category: 'clinical_certs',
+    requiredForTier1: true,
+    status: 'verified',
+    fileName: 'AHA_ACLS_Provider_Card.pdf',
+    uploadDate: '2025-08-20',
+    expirationDate: '2027-08-20',
+    issuer: 'American Heart Association',
+    docNumber: 'AHA-ACLS-99218',
+    notes: 'Valid for all Emergency & Inpatient moonlighting positions'
+  },
+  {
+    id: 'bls_card',
+    name: 'Basic Life Support (BLS) Certificate',
+    category: 'clinical_certs',
+    requiredForTier1: true,
+    status: 'verified',
+    fileName: 'AHA_BLS_Provider_Card.pdf',
+    uploadDate: '2025-08-20',
+    expirationDate: '2027-08-20',
+    issuer: 'American Heart Association',
+    docNumber: 'AHA-BLS-88310'
+  },
+  {
+    id: 'malpractice_cert',
+    name: 'Certificate of Malpractice Insurance Coverage',
+    category: 'malpractice_health',
+    requiredForTier1: true,
+    status: 'pending',
+    fileName: 'Pending_Carrier_Binder.pdf',
+    uploadDate: '2026-08-01',
+    expirationDate: '2027-08-01',
+    issuer: 'NORCAL Mutual / UCLA Moonlighting Endorsement',
+    docNumber: 'POLICY-MP-88391',
+    notes: '$1M/$3M Claims-Made Coverage Certificate with Tail'
+  },
+  {
+    id: 'tb_immunization',
+    name: 'Immunization & Health Clearance (QuantiFERON TB & Flu)',
+    category: 'malpractice_health',
+    requiredForTier1: true,
+    status: 'verified',
+    fileName: 'Health_Clearance_2026.pdf',
+    uploadDate: '2026-07-10',
+    expirationDate: '2027-07-10',
+    issuer: 'Occupational Health Dept',
+    notes: 'Negative TB QuantiFERON Gold, Annual Flu Vaccine, Hep B Titer Positive'
+  },
+  {
+    id: 'mask_fit',
+    name: 'N95 Respirator Mask Fit Test',
+    category: 'malpractice_health',
+    requiredForTier1: false,
+    status: 'missing',
+    notes: 'Required for ICU / Airborne Isolation shifts. Upload 3M 1860 / 1870+ card.'
+  },
+  {
+    id: 'cv_document',
+    name: 'Curriculum Vitae (CV) & ACGME Case Logs',
+    category: 'academic',
+    requiredForTier1: true,
+    status: 'verified',
+    fileName: 'Dr_Jessie_Smith_CV_2026.pdf',
+    uploadDate: '2026-08-01',
+    issuer: 'Self / ACGME Residency Review',
+    notes: 'Includes full clinical rotation breakdown and procedure log summary'
+  },
+  {
+    id: 'usmle_transcript',
+    name: 'USMLE Step 1, Step 2 CK & Step 3 Transcripts',
+    category: 'academic',
+    requiredForTier1: false,
+    status: 'missing',
+    notes: 'Official FSMB transcript download required for hospital credentialing board.'
+  }
+];
+
+export const INITIAL_RESIDENT: ResidentProfile = {
+  id: 'res_jessie_smith',
+  firstName: 'Jessie',
+  lastName: 'Smith',
+  title: 'MD',
+  email: 'dr.jessiesmith@moondoc.app',
+  phone: '(310) 555-0192',
+  headshotUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500&auto=format&fit=crop&q=80',
+  residencyProgram: 'UCLA Emergency Medicine (Ronald Reagan/Olive View)',
+  hospitalAffiliation: 'UCLA Health Emergency Medicine',
+  specialty: 'Emergency Medicine',
+  pgyLevel: 'PGY-2',
+  gender: 'Female',
+  pronouns: 'She/Her',
+  npiNumber: '1942850192',
+  stateLicenseNumber: 'CA-C192840-MED',
+  licenseState: 'CA',
+  deaNumber: 'BM1948291',
+  bio: 'PGY-2 Emergency Medicine Resident with ACLS/PALS/ATLS certification and Level 1 Trauma Center background. Seeking community ER, urgent care, and ED fast-track moonlighting shifts in Greater Los Angeles.',
+  documents: INITIAL_DOCUMENTS
+};
+
+export const MOCK_HOSPITALS: HospitalFacility[] = [
+  {
+    id: 'hosp_st_francis',
+    name: 'St. Francis Medical Center ED',
+    systemName: 'Prime Healthcare SoCal',
+    address: '3630 E Imperial Hwy',
+    city: 'Lynwood',
+    state: 'CA',
+    lat: 33.9288,
+    lng: -118.2040,
+    emrSystem: 'Epic Systems',
+    hospitalRating: 4.8,
+    badge: 'High Acuity ER',
+    contactPerson: 'Dr. Sarah Jenkins - EM Director',
+    contactEmail: 'moonlighting@stfrancis.org',
+    logoUrl: 'https://images.unsplash.com/photo-1587351021759-3e566b6af7cc?w=150&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 'hosp_exer_sm',
+    name: 'Exer Urgent Care - Santa Monica',
+    systemName: 'Exer More Than Urgent Care Network',
+    address: '2525 Wilshire Blvd',
+    city: 'Santa Monica',
+    state: 'CA',
+    lat: 34.0345,
+    lng: -118.4831,
+    emrSystem: 'AthenaHealth',
+    hospitalRating: 4.9,
+    badge: 'Urgent Care Fast-Track',
+    contactPerson: 'David Chen - Clinical Recruiter',
+    contactEmail: 'dchen@exerurgentcare.com'
+  },
+  {
+    id: 'hosp_valley_pres',
+    name: 'Valley Presbyterian Community ED',
+    systemName: 'Valley Presbyterian Health System',
+    address: '15107 Vanowen St',
+    city: 'Van Nuys',
+    state: 'CA',
+    lat: 34.1939,
+    lng: -118.4619,
+    emrSystem: 'Cerner Millennium',
+    hospitalRating: 4.7,
+    badge: 'Community ER',
+    contactPerson: 'Elena Rostova - Physician Recruiter',
+    contactEmail: 'elena.rostova@valleypres.org'
+  },
+  {
+    id: 'hosp_kaiser_sunset',
+    name: 'Kaiser Sunset Urgent Care Center',
+    systemName: 'Kaiser Permanente SoCal',
+    address: '4867 Sunset Blvd',
+    city: 'Los Angeles',
+    state: 'CA',
+    lat: 34.1016,
+    lng: -118.2916,
+    emrSystem: 'HealthConnect (Epic)',
+    hospitalRating: 4.8,
+    badge: 'Same Day Pay',
+    contactPerson: 'Dr. Marcus Vance - Chief Medical Officer',
+    contactEmail: 'mvance@kp.org'
+  },
+  {
+    id: 'hosp_glendale_adv',
+    name: 'Glendale Adventist ER Division',
+    systemName: 'Adventist Health SoCal',
+    address: '1509 Wilson Terrace',
+    city: 'Glendale',
+    state: 'CA',
+    lat: 34.1481,
+    lng: -118.2325,
+    emrSystem: 'Epic Systems',
+    hospitalRating: 4.8,
+    contactPerson: 'Rachel Adams - Medical Staff Services',
+    contactEmail: 'radams@ah.org'
+  },
+  {
+    id: 'hosp_la_general',
+    name: 'LA General Medical Center (LAC+USC) ED',
+    systemName: 'LA County Dept of Health Services',
+    address: '2051 Marengo St',
+    city: 'Los Angeles',
+    state: 'CA',
+    lat: 34.0578,
+    lng: -118.2048,
+    emrSystem: 'ORCHID (Cerner)',
+    hospitalRating: 4.9,
+    badge: 'Nocturnist Surge',
+    contactPerson: 'Tom Reynolds - EM Operations Lead',
+    contactEmail: 'treynolds@dhs.lacounty.gov'
+  },
+  {
+    id: 'hosp_torrance_mem',
+    name: 'Torrance Memorial Medical Center ED',
+    systemName: 'Cedars-Sinai Health System Affiliate',
+    address: '3330 Lomita Blvd',
+    city: 'Torrance',
+    state: 'CA',
+    lat: 33.8058,
+    lng: -118.3533,
+    emrSystem: 'Epic Systems',
+    hospitalRating: 4.9,
+    badge: 'Level 2 Trauma',
+    contactPerson: 'Dr. Gregory Vance - EM Director',
+    contactEmail: 'gvance@tmmc.com'
+  }
+];
+
+export const MOCK_SHIFTS: MoonlightingShift[] = [
+  {
+    id: 'shift_101',
+    hospitalId: 'hosp_st_francis',
+    hospitalName: 'St. Francis Medical Center ED',
+    facilityLocation: '3630 E Imperial Hwy, Lynwood, CA',
+    lat: 33.9288,
+    lng: -118.2040,
+    distanceMiles: 8.5,
+    specialty: 'Emergency Medicine',
+    title: 'High-Volume Community ER Nocturnist',
+    department: 'Emergency Department',
+    hourlyRate: 185,
+    totalPay: 2220,
+    shiftType: 'Night Shift',
+    startTime: '19:00',
+    endTime: '07:00',
+    date: '2026-08-15',
+    durationHours: 12,
+    pgyRequirement: ['PGY-2', 'PGY-3', 'PGY-4', 'Fellow'],
+    requiredDocIds: ['pd_letter', 'state_license', 'dea_certificate', 'acls_card', 'malpractice_cert', 'tb_immunization'],
+    description: 'Community ED nocturnist coverage in Level 2 Trauma center. ESI Level 2-4 management, rapid laceration repair, bedside ultrasound, and procedural sedation. Attending backup on site.',
+    malpracticeIncluded: true,
+    restCallRoomAvailable: true,
+    mealStipend: true,
+    urgency: 'High Demand',
+    spotsAvailable: 2
+  },
+  {
+    id: 'shift_102',
+    hospitalId: 'hosp_exer_sm',
+    hospitalName: 'Exer Urgent Care - Santa Monica',
+    facilityLocation: '2525 Wilshire Blvd, Santa Monica, CA',
+    lat: 34.0345,
+    lng: -118.4831,
+    distanceMiles: 4.2,
+    specialty: 'Emergency Medicine',
+    title: 'Urgent Care Fast-Track Moonlighter',
+    department: 'Outpatient Urgent Care',
+    hourlyRate: 135,
+    totalPay: 1080,
+    shiftType: 'Day Shift',
+    startTime: '09:00',
+    endTime: '17:00',
+    date: '2026-08-16',
+    durationHours: 8,
+    pgyRequirement: ['PGY-2', 'PGY-3', 'PGY-4'],
+    requiredDocIds: ['pd_letter', 'state_license', 'acls_card', 'malpractice_cert'],
+    description: 'High-efficiency walk-in urgent care. Onsite digital X-Ray, splinting, CLIA-waived labs, and suture repairs. Average 20-24 walk-in patients per 8hr shift.',
+    malpracticeIncluded: true,
+    restCallRoomAvailable: false,
+    mealStipend: true,
+    urgency: 'Standard',
+    spotsAvailable: 1
+  },
+  {
+    id: 'shift_103',
+    hospitalId: 'hosp_valley_pres',
+    hospitalName: 'Valley Presbyterian Community ED',
+    facilityLocation: '15107 Vanowen St, Van Nuys, CA',
+    lat: 34.1939,
+    lng: -118.4619,
+    distanceMiles: 11.2,
+    specialty: 'Emergency Medicine',
+    title: 'Community Emergency Department Swing Shift',
+    department: 'Emergency Department',
+    hourlyRate: 165,
+    totalPay: 1650,
+    shiftType: 'Swing Shift',
+    startTime: '14:00',
+    endTime: '00:00',
+    date: '2026-08-15',
+    durationHours: 10,
+    pgyRequirement: ['PGY-2', 'PGY-3', 'PGY-4', 'Fellow'],
+    requiredDocIds: ['pd_letter', 'state_license', 'dea_certificate', 'acls_card', 'bls_card', 'malpractice_cert'],
+    description: 'Peak volume swing coverage in 35-bed community ER. Manage abdominal pain, chest pain rule-outs, dyspnea, and simple orthopedics.',
+    malpracticeIncluded: true,
+    restCallRoomAvailable: true,
+    mealStipend: true,
+    urgency: 'Urgent',
+    spotsAvailable: 1
+  },
+  {
+    id: 'shift_104',
+    hospitalId: 'hosp_kaiser_sunset',
+    hospitalName: 'Kaiser Sunset Urgent Care Center',
+    facilityLocation: '4867 Sunset Blvd, Los Angeles, CA',
+    lat: 34.1016,
+    lng: -118.2916,
+    distanceMiles: 5.0,
+    specialty: 'Emergency Medicine',
+    title: 'After-Hours Urgent Care Fast Track',
+    department: 'Outpatient Urgent Care',
+    hourlyRate: 145,
+    totalPay: 1740,
+    shiftType: 'Swing Shift',
+    startTime: '12:00',
+    endTime: '00:00',
+    date: '2026-08-16',
+    durationHours: 12,
+    pgyRequirement: ['PGY-2', 'PGY-3', 'PGY-4'],
+    requiredDocIds: ['pd_letter', 'state_license', 'bls_card', 'malpractice_cert'],
+    description: 'Dedicated urgent care fast track for Kaiser HealthConnect panel. Low acuity upper respiratory, cellulitis, sprains, and minor trauma.',
+    malpracticeIncluded: true,
+    restCallRoomAvailable: false,
+    mealStipend: true,
+    urgency: 'Urgent',
+    spotsAvailable: 3
+  },
+  {
+    id: 'shift_105',
+    hospitalId: 'hosp_glendale_adv',
+    hospitalName: 'Glendale Adventist ER Division',
+    facilityLocation: '1509 Wilson Terrace, Glendale, CA',
+    lat: 34.1481,
+    lng: -118.2325,
+    distanceMiles: 7.8,
+    specialty: 'Emergency Medicine',
+    title: 'Community ER Overnight Attending Relief',
+    department: 'Emergency Department',
+    hourlyRate: 175,
+    totalPay: 2100,
+    shiftType: 'Night Shift',
+    startTime: '20:00',
+    endTime: '08:00',
+    date: '2026-08-17',
+    durationHours: 12,
+    pgyRequirement: ['PGY-2', 'PGY-3', 'PGY-4', 'Fellow'],
+    requiredDocIds: ['pd_letter', 'state_license', 'dea_certificate', 'acls_card', 'malpractice_cert', 'tb_immunization', 'mask_fit'],
+    description: 'Overnight ER coverage. High-volume chest pain protocols, acute strokes, and trauma stabilization. Double coverage with senior APP.',
+    malpracticeIncluded: true,
+    restCallRoomAvailable: true,
+    mealStipend: true,
+    urgency: 'High Demand',
+    spotsAvailable: 1
+  },
+  {
+    id: 'shift_106',
+    hospitalId: 'hosp_la_general',
+    hospitalName: 'LA General Medical Center (LAC+USC) ED',
+    facilityLocation: '2051 Marengo St, Los Angeles, CA',
+    lat: 34.0578,
+    lng: -118.2048,
+    distanceMiles: 5.4,
+    specialty: 'Emergency Medicine',
+    title: 'Urgent ED Surge / High-Acuity Fast Track',
+    department: 'Department of Emergency Medicine',
+    hourlyRate: 205,
+    totalPay: 2460,
+    shiftType: 'Night Shift',
+    startTime: '19:00',
+    endTime: '07:00',
+    date: '2026-08-22',
+    durationHours: 12,
+    pgyRequirement: ['PGY-2', 'PGY-3', 'PGY-4', 'Fellow'],
+    requiredDocIds: ['pd_letter', 'state_license', 'acls_card', 'bls_card', 'malpractice_cert'],
+    description: 'Weekend surge coverage in urban Level 1 trauma ED. Acute resuscitation, procedural sedation, thoracostomies, and central line access.',
+    malpracticeIncluded: true,
+    restCallRoomAvailable: true,
+    mealStipend: true,
+    urgency: 'High Demand',
+    spotsAvailable: 1
+  },
+  {
+    id: 'shift_107',
+    hospitalId: 'hosp_torrance_mem',
+    hospitalName: 'Torrance Memorial Medical Center ED',
+    facilityLocation: '3330 Lomita Blvd, Torrance, CA',
+    lat: 33.8058,
+    lng: -118.3533,
+    distanceMiles: 14.1,
+    specialty: 'Emergency Medicine',
+    title: 'Community ED Weekend Fast Track Relief',
+    department: 'Emergency Department',
+    hourlyRate: 155,
+    totalPay: 1550,
+    shiftType: 'Day Shift',
+    startTime: '08:00',
+    endTime: '18:00',
+    date: '2026-08-23',
+    durationHours: 10,
+    pgyRequirement: ['PGY-2', 'PGY-3', 'PGY-4'],
+    requiredDocIds: ['pd_letter', 'state_license', 'dea_certificate', 'acls_card', 'malpractice_cert', 'tb_immunization'],
+    description: 'Weekend fast track coverage at Torrance Memorial Level 2 Trauma center. Manage minor trauma, laceration repairs, splinting, and acute medical evaluations.',
+    malpracticeIncluded: true,
+    restCallRoomAvailable: true,
+    mealStipend: true,
+    urgency: 'Standard',
+    spotsAvailable: 2
+  }
+];
+
+export const MOCK_OTHER_RESIDENTS: ResidentProfile[] = [
+  {
+    id: 'res_kevin_park',
+    firstName: 'Kevin',
+    lastName: 'Park',
+    title: 'MD',
+    email: 'kevin.park@med.usc.edu',
+    phone: '(213) 555-0812',
+    headshotUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=500&auto=format&fit=crop&q=80',
+    residencyProgram: 'Keck School of Medicine of USC',
+    hospitalAffiliation: 'LA General / Keck USC EM Program',
+    specialty: 'Emergency Medicine',
+    pgyLevel: 'PGY-3',
+    gender: 'Male',
+    pronouns: 'He/Him',
+    npiNumber: '1849201948',
+    stateLicenseNumber: 'CA-A182940-MED',
+    licenseState: 'CA',
+    deaNumber: 'BP2910482',
+    bio: 'PGY-3 Senior Emergency Medicine Resident at Keck USC. ATLS, ACLS, PALS instructor. Extensive experience in high-acuity resuscitation and airway management.',
+    documents: [
+      { id: 'pd_letter', name: 'Program Director (PD) Moonlighting Approval Letter', category: 'institutional', requiredForTier1: true, status: 'verified', fileName: 'USC_PD_Approval_2026.pdf', uploadDate: '2026-07-15', issuer: 'Keck USC Emergency Medicine', docNumber: 'PD-USC-2026-003' },
+      { id: 'state_license', name: 'Full / Limited State Medical License', category: 'licensing', requiredForTier1: true, status: 'verified', fileName: 'CA_Medical_License_Park.pdf', uploadDate: '2026-06-01', expirationDate: '2027-11-30', issuer: 'Medical Board of California', docNumber: 'CA-A182940-MED' },
+      { id: 'npi_verification', name: 'NPI Registration', category: 'licensing', requiredForTier1: true, status: 'verified', docNumber: '1849201948', issuer: 'CMS NPPES' },
+      { id: 'dea_certificate', name: 'Federal DEA Registration Certificate', category: 'licensing', requiredForTier1: true, status: 'verified', docNumber: 'BP2910482', issuer: 'U.S. DEA' },
+      { id: 'acls_card', name: 'ACLS Provider Card', category: 'clinical_certs', requiredForTier1: true, status: 'verified', docNumber: 'AHA-ACLS-77291', issuer: 'AHA' },
+      { id: 'malpractice_cert', name: 'Certificate of Malpractice Insurance Coverage', category: 'malpractice_health', requiredForTier1: true, status: 'pending', fileName: 'USC_Malpractice_Binder.pdf', notes: 'Awaiting MSO Sign-Off' },
+      { id: 'tb_immunization', name: 'Immunization & Health Clearance', category: 'malpractice_health', requiredForTier1: true, status: 'verified', notes: 'TB & Flu Clear' }
+    ]
+  },
+  {
+    id: 'res_maya_lin',
+    firstName: 'Maya',
+    lastName: 'Lin',
+    title: 'MD',
+    email: 'maya.lin@kp.org',
+    phone: '(323) 555-0482',
+    headshotUrl: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=500&auto=format&fit=crop&q=80',
+    residencyProgram: 'Kaiser Permanente SoCal',
+    hospitalAffiliation: 'Kaiser Sunset Emergency Department',
+    specialty: 'Emergency Medicine',
+    pgyLevel: 'PGY-2',
+    gender: 'Female',
+    pronouns: 'She/Her',
+    npiNumber: '1920391820',
+    stateLicenseNumber: 'CA-C188203-MED',
+    licenseState: 'CA',
+    deaNumber: 'BL9920192',
+    bio: 'PGY-2 Emergency Medicine Resident at Kaiser Permanente. Experienced in high-volume community ER triage, pediatric fast track, and minor procedural sedation.',
+    documents: [
+      { id: 'pd_letter', name: 'Program Director (PD) Moonlighting Approval Letter', category: 'institutional', requiredForTier1: true, status: 'verified', fileName: 'Kaiser_PD_Approval_2026.pdf', uploadDate: '2026-07-28', issuer: 'Kaiser SoCal EM Program', docNumber: 'PD-KP-2026-88' },
+      { id: 'state_license', name: 'Full / Limited State Medical License', category: 'licensing', requiredForTier1: true, status: 'verified', fileName: 'CA_License_Lin.pdf', issuer: 'Medical Board of California', docNumber: 'CA-C188203-MED' },
+      { id: 'npi_verification', name: 'NPI Registration', category: 'licensing', requiredForTier1: true, status: 'verified', docNumber: '1920391820', issuer: 'CMS NPPES' },
+      { id: 'dea_certificate', name: 'Federal DEA Registration Certificate', category: 'licensing', requiredForTier1: true, status: 'verified', docNumber: 'BL9920192', issuer: 'U.S. DEA' },
+      { id: 'acls_card', name: 'ACLS Provider Card', category: 'clinical_certs', requiredForTier1: true, status: 'verified', docNumber: 'AHA-ACLS-90182', issuer: 'AHA' },
+      { id: 'malpractice_cert', name: 'Certificate of Malpractice Insurance Coverage', category: 'malpractice_health', requiredForTier1: true, status: 'pending', fileName: 'Kaiser_Malpractice_Binder.pdf', notes: 'Pending MSO Review' },
+      { id: 'tb_immunization', name: 'Immunization & Health Clearance', category: 'malpractice_health', requiredForTier1: true, status: 'verified', notes: 'Clearance Active' }
+    ]
+  },
+  {
+    id: 'res_ananya_sharma',
+    firstName: 'Ananya',
+    lastName: 'Sharma',
+    title: 'MD',
+    email: 'asharma@dhs.lacounty.gov',
+    phone: '(310) 555-0341',
+    headshotUrl: 'https://images.unsplash.com/photo-1651008376811-b90baee60c1f?w=500&auto=format&fit=crop&q=80',
+    residencyProgram: 'Harbor-UCLA Medical Center',
+    hospitalAffiliation: 'LA County Harbor-UCLA Health',
+    specialty: 'Emergency Medicine',
+    pgyLevel: 'PGY-2',
+    gender: 'Female',
+    pronouns: 'She/Her',
+    npiNumber: '1738201928',
+    stateLicenseNumber: 'CA-C199201-MED',
+    licenseState: 'CA',
+    deaNumber: 'BS8820193',
+    bio: 'PGY-2 Emergency Medicine Resident at Harbor-UCLA. Focused on urgent care fast-track triage and ultrasound-guided procedures.',
+    documents: [
+      { id: 'pd_letter', name: 'Program Director (PD) Moonlighting Approval Letter', category: 'institutional', requiredForTier1: true, status: 'verified', fileName: 'HarborUCLA_PD_Letter.pdf', uploadDate: '2026-07-20', issuer: 'Harbor-UCLA EM Program', docNumber: 'PD-HARBOR-2026-11' },
+      { id: 'state_license', name: 'Full / Limited State Medical License', category: 'licensing', requiredForTier1: true, status: 'verified', fileName: 'CA_License_Sharma.pdf', issuer: 'Medical Board of California', docNumber: 'CA-C199201-MED' },
+      { id: 'npi_verification', name: 'NPI Registration', category: 'licensing', requiredForTier1: true, status: 'verified', docNumber: '1738201928', issuer: 'CMS NPPES' },
+      { id: 'dea_certificate', name: 'Federal DEA Registration Certificate', category: 'licensing', requiredForTier1: true, status: 'verified', docNumber: 'BS8820193', issuer: 'U.S. DEA' },
+      { id: 'acls_card', name: 'ACLS Provider Card', category: 'clinical_certs', requiredForTier1: true, status: 'verified', docNumber: 'AHA-ACLS-33102', issuer: 'AHA' },
+      { id: 'malpractice_cert', name: 'Certificate of Malpractice Insurance Coverage', category: 'malpractice_health', requiredForTier1: true, status: 'verified', fileName: 'Harbor_Malpractice.pdf', notes: 'Fully Verified' },
+      { id: 'tb_immunization', name: 'Immunization & Health Clearance', category: 'malpractice_health', requiredForTier1: true, status: 'verified', notes: 'Clearance Granted' }
+    ]
+  },
+  {
+    id: 'res_marcus_taylor',
+    firstName: 'Marcus',
+    lastName: 'Taylor',
+    title: 'MD',
+    email: 'mtaylor@cshs.org',
+    phone: '(323) 555-0992',
+    headshotUrl: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=500&auto=format&fit=crop&q=80',
+    residencyProgram: 'Cedars-Sinai Medical Center',
+    hospitalAffiliation: 'Cedars-Sinai Health System',
+    specialty: 'Emergency Medicine',
+    pgyLevel: 'PGY-3',
+    gender: 'Male',
+    pronouns: 'He/Him',
+    npiNumber: '1628102938',
+    stateLicenseNumber: 'CA-A173820-MED',
+    licenseState: 'CA',
+    deaNumber: 'BT9920184',
+    bio: 'PGY-3 Senior Resident at Cedars-Sinai. Specializes in overnight community ED cross-coverage, fast-track laceration repair, and trauma triage.',
+    documents: [
+      { id: 'pd_letter', name: 'Program Director (PD) Moonlighting Approval Letter', category: 'institutional', requiredForTier1: true, status: 'verified', fileName: 'Cedars_PD_Approval.pdf', uploadDate: '2026-06-10', issuer: 'Cedars-Sinai Emergency Dept', docNumber: 'PD-CSHS-2026-42' },
+      { id: 'state_license', name: 'Full / Limited State Medical License', category: 'licensing', requiredForTier1: true, status: 'verified', fileName: 'CA_License_Taylor.pdf', issuer: 'Medical Board of California', docNumber: 'CA-A173820-MED' },
+      { id: 'npi_verification', name: 'NPI Registration', category: 'licensing', requiredForTier1: true, status: 'verified', docNumber: '1628102938', issuer: 'CMS NPPES' },
+      { id: 'dea_certificate', name: 'Federal DEA Registration Certificate', category: 'licensing', requiredForTier1: true, status: 'verified', docNumber: 'BT9920184', issuer: 'U.S. DEA' },
+      { id: 'acls_card', name: 'ACLS Provider Card', category: 'clinical_certs', requiredForTier1: true, status: 'verified', docNumber: 'AHA-ACLS-99812', issuer: 'AHA' },
+      { id: 'malpractice_cert', name: 'Certificate of Malpractice Insurance Coverage', category: 'malpractice_health', requiredForTier1: true, status: 'verified', fileName: 'Cedars_Malpractice_Binder.pdf', notes: 'Verified Claims-Made $1M/$3M' },
+      { id: 'tb_immunization', name: 'Immunization & Health Clearance', category: 'malpractice_health', requiredForTier1: true, status: 'verified', notes: 'Annual Clearance Active' }
+    ]
+  },
+  {
+    id: 'res_elena_rostova',
+    firstName: 'Elena',
+    lastName: 'Rostova',
+    title: 'MD',
+    email: 'erostova@dhs.lacounty.gov',
+    phone: '(213) 555-0721',
+    headshotUrl: 'https://images.unsplash.com/photo-1527613426441-4da17471b66d?w=500&auto=format&fit=crop&q=80',
+    residencyProgram: 'LA General (LAC+USC) Medical Center',
+    hospitalAffiliation: 'LA County Dept of Health Services',
+    specialty: 'Emergency Medicine',
+    pgyLevel: 'PGY-3',
+    gender: 'Female',
+    pronouns: 'She/Her',
+    npiNumber: '1540291029',
+    stateLicenseNumber: 'CA-A190291-MED',
+    licenseState: 'CA',
+    deaNumber: 'BR1029301',
+    bio: 'PGY-3 Senior Resident at LA General. Extensive experience in high-acuity urban ERs, fast-track urgent care, ultrasound-guided venous access, and trauma resuscitations.',
+    documents: [
+      { id: 'pd_letter', name: 'Program Director (PD) Moonlighting Approval Letter', category: 'institutional', requiredForTier1: true, status: 'verified', fileName: 'LAGeneral_PD_Approval.pdf', uploadDate: '2026-06-15', issuer: 'LA General EM Residency', docNumber: 'PD-LAGEN-2026-09' },
+      { id: 'state_license', name: 'Full / Limited State Medical License', category: 'licensing', requiredForTier1: true, status: 'verified', fileName: 'CA_License_Rostova.pdf', issuer: 'Medical Board of California', docNumber: 'CA-A190291-MED' },
+      { id: 'npi_verification', name: 'NPI Registration', category: 'licensing', requiredForTier1: true, status: 'verified', docNumber: '1540291029', issuer: 'CMS NPPES' },
+      { id: 'dea_certificate', name: 'Federal DEA Registration Certificate', category: 'licensing', requiredForTier1: true, status: 'verified', docNumber: 'BR1029301', issuer: 'U.S. DEA' },
+      { id: 'acls_card', name: 'ACLS Provider Card', category: 'clinical_certs', requiredForTier1: true, status: 'verified', docNumber: 'AHA-ACLS-44021', issuer: 'AHA' },
+      { id: 'malpractice_cert', name: 'Certificate of Malpractice Insurance Coverage', category: 'malpractice_health', requiredForTier1: true, status: 'verified', fileName: 'LAGeneral_Malpractice.pdf', notes: 'Fully Verified' },
+      { id: 'tb_immunization', name: 'Immunization & Health Clearance', category: 'malpractice_health', requiredForTier1: true, status: 'verified', notes: 'Clearance Granted' }
+    ]
+  }
+];
+
+export const INITIAL_APPLICATIONS: Application[] = [
+  // --------------------------------------------------------------------------
+  // CATEGORY 1: ACCEPTED (PENDING SHIFT) - 2 CANDIDATES
+  // --------------------------------------------------------------------------
+  {
+    id: 'app_801',
+    shiftId: 'shift_101',
+    shift: MOCK_SHIFTS[0],
+    appliedDate: '2026-08-10',
+    status: 'Approved',
+    hospitalNotes: 'Credentials verified by Dr. Sarah Jenkins. UCLA PD Letter and CA State License verified. Approved for Saturday Night 7 PM shift!',
+    passportShareToken: 'MOONDOC-CA-88401',
+    applicantProfile: INITIAL_RESIDENT, // Dr. Jessie Smith (UCLA)
+    messages: [
+      {
+        id: 'msg_101',
+        senderRole: 'resident',
+        senderName: 'Dr. Jessie Smith',
+        text: 'Hello! I submitted my MoonDoc Passport for the Saturday Night Community ER nocturnist shift.',
+        timestamp: 'Aug 10, 02:15 PM'
+      },
+      {
+        id: 'msg_102',
+        senderRole: 'hospital',
+        senderName: 'St. Francis Medical Center MSO Coordinator',
+        text: 'Welcome Dr. Smith! We reviewed your UCLA PD letter and California state license scan. Your passport looks pristine. You are officially approved!',
+        timestamp: 'Aug 10, 03:30 PM'
+      },
+      {
+        id: 'msg_103',
+        senderRole: 'hospital',
+        senderName: 'St. Francis Medical Center MSO Coordinator',
+        text: 'Please report to ED Nursing Station 2 on the 1st floor at 18:45 for brief orientation. Parking pass #8821 active.',
+        timestamp: 'Aug 10, 03:32 PM'
+      },
+      {
+        id: 'msg_104',
+        senderRole: 'resident',
+        senderName: 'Dr. Jessie Smith',
+        text: 'Thank you so much! Will see you Saturday evening.',
+        timestamp: 'Aug 10, 04:05 PM'
+      }
+    ]
+  },
+  {
+    id: 'app_808',
+    shiftId: 'shift_102',
+    shift: MOCK_SHIFTS[1],
+    appliedDate: '2026-08-08',
+    status: 'Approved',
+    hospitalNotes: 'Roster cleared. Dr. Jessie Smith is fully credentialed for Exer Urgent Care sites.',
+    passportShareToken: 'MOONDOC-EXER-44810',
+    applicantProfile: INITIAL_RESIDENT,
+    messages: [
+      {
+        id: 'msg_e1',
+        senderRole: 'resident',
+        senderName: 'Dr. Jessie Smith',
+        text: 'Shared my MoonDoc Passport for Exer Urgent Care fast track shifts.',
+        timestamp: 'Aug 08, 11:20 AM'
+      },
+      {
+        id: 'msg_e2',
+        senderRole: 'hospital',
+        senderName: 'Exer Urgent Care Operations',
+        text: 'Welcome Dr. Smith! You are approved and on our active candidate roster.',
+        timestamp: 'Aug 08, 01:45 PM'
+      }
+    ]
+  },
+  {
+    id: 'app_807',
+    shiftId: 'shift_103',
+    shift: MOCK_SHIFTS[2],
+    appliedDate: '2026-08-11',
+    status: 'Credentialing Review',
+    hospitalNotes: 'Passport submitted by Dr. Jessie Smith to Valley Presbyterian MSO. Reviewing credentials.',
+    passportShareToken: 'MOONDOC-VALLEY-11029',
+    applicantProfile: INITIAL_RESIDENT,
+    messages: [
+      {
+        id: 'msg_v1',
+        senderRole: 'resident',
+        senderName: 'Dr. Jessie Smith',
+        text: 'Hello Valley Presbyterian team! I submitted my MoonDoc Passport for credentialing clearance.',
+        timestamp: 'Aug 11, 09:00 AM'
+      },
+      {
+        id: 'msg_v2',
+        senderRole: 'hospital',
+        senderName: 'Valley Presbyterian MSO',
+        text: 'Thank you Dr. Smith! We received your passport package. MSO is verifying malpractice binder.',
+        timestamp: 'Aug 11, 10:15 AM'
+      }
+    ]
+  },
+  {
+    id: 'app_804',
+    shiftId: 'shift_104',
+    shift: MOCK_SHIFTS[3],
+    appliedDate: '2026-08-09',
+    status: 'Approved',
+    hospitalNotes: 'Credentials 100% verified by MSO. Cleared for upcoming urgent care fast-track shift.',
+    passportShareToken: 'MOONDOC-HARBOR-55102',
+    applicantProfile: MOCK_OTHER_RESIDENTS[2], // Dr. Ananya Sharma (Harbor-UCLA)
+    messages: [
+      {
+        id: 'msg_a1',
+        senderRole: 'resident',
+        senderName: 'Dr. Ananya Sharma',
+        text: 'Hi, excited for the fast track shift on Sunday!',
+        timestamp: 'Aug 09, 04:00 PM'
+      },
+      {
+        id: 'msg_a2',
+        senderRole: 'hospital',
+        senderName: 'Kaiser Sunset Urgent Care MSO',
+        text: 'All credentials verified! Parking and badge instructions sent to your email.',
+        timestamp: 'Aug 10, 09:15 AM'
+      }
+    ]
+  },
+
+  // --------------------------------------------------------------------------
+  // CATEGORY 2: UNDER REVIEW - 2 CANDIDATES
+  // --------------------------------------------------------------------------
+  {
+    id: 'app_803',
+    shiftId: 'shift_101',
+    shift: MOCK_SHIFTS[0],
+    appliedDate: '2026-08-11',
+    status: 'Credentialing Review',
+    hospitalNotes: 'Passport submitted by Dr. Kevin Park. MSO reviewing malpractice binder.',
+    passportShareToken: 'MOONDOC-USC-33821',
+    applicantProfile: MOCK_OTHER_RESIDENTS[0], // Dr. Kevin Park (Keck USC)
+    messages: [
+      {
+        id: 'msg_k1',
+        senderRole: 'resident',
+        senderName: 'Dr. Kevin Park',
+        text: 'Hello MSO team, submitted my Keck USC passport for the nocturnist ER coverage shift.',
+        timestamp: 'Aug 11, 08:30 AM'
+      }
+    ]
+  },
+  {
+    id: 'app_802',
+    shiftId: 'shift_103',
+    shift: MOCK_SHIFTS[2],
+    appliedDate: '2026-08-11',
+    status: 'Credentialing Review',
+    hospitalNotes: 'Passport received by Valley Presbyterian MSO. Pending final malpractice binder attachment.',
+    passportShareToken: 'MOONDOC-KP-99203',
+    applicantProfile: MOCK_OTHER_RESIDENTS[1], // Dr. Maya Lin (Kaiser SoCal)
+    messages: [
+      {
+        id: 'msg_201',
+        senderRole: 'resident',
+        senderName: 'Dr. Maya Lin',
+        text: 'Hi Valley Presbyterian team, applied for the Community ER Swing shift.',
+        timestamp: 'Aug 11, 09:10 AM'
+      },
+      {
+        id: 'msg_202',
+        senderRole: 'hospital',
+        senderName: 'Valley Presbyterian MSO',
+        text: 'Thanks Dr. Lin! Passport received. We are currently matching your malpractice binder certificate with our hospital group policy.',
+        timestamp: 'Aug 11, 10:25 AM'
+      }
+    ]
+  },
+
+  // --------------------------------------------------------------------------
+  // CATEGORY 3: WORKED & COMPLETED - 2 CANDIDATES
+  // --------------------------------------------------------------------------
+  {
+    id: 'app_805',
+    shiftId: 'shift_105',
+    shift: {
+      ...MOCK_SHIFTS[4],
+      date: '2026-08-01',
+      title: 'Community ER Overnight Attending Relief'
+    },
+    appliedDate: '2026-07-25',
+    status: 'Completed',
+    hospitalNotes: 'Shift completed with excellent clinical evaluations. Direct deposit dispatched.',
+    passportShareToken: 'MOONDOC-CEDARS-99104',
+    applicantProfile: MOCK_OTHER_RESIDENTS[3], // Dr. Marcus Taylor (Cedars-Sinai)
+    messages: [
+      {
+        id: 'msg_m1',
+        senderRole: 'hospital',
+        senderName: 'Glendale Adventist MSO',
+        text: 'Payment statement processed for $2,100. Thank you Dr. Taylor!',
+        timestamp: 'Aug 02, 10:00 AM'
+      }
+    ]
+  },
+  {
+    id: 'app_800',
+    shiftId: 'shift_102',
+    shift: {
+      ...MOCK_SHIFTS[1],
+      date: '2026-08-02',
+      title: 'Urgent Care Fast-Track Moonlighter'
+    },
+    appliedDate: '2026-07-28',
+    status: 'Completed',
+    hospitalNotes: 'Shift completed successfully. Payment processed via Direct Deposit.',
+    passportShareToken: 'MOONDOC-EXER-77102',
+    applicantProfile: MOCK_OTHER_RESIDENTS[4], // Dr. Elena Rostova (LA General)
+    messages: [
+      {
+        id: 'msg_301',
+        senderRole: 'hospital',
+        senderName: 'Exer Urgent Care Operations',
+        text: 'Direct deposit payment statement for $1,080 dispatched. Thank you for your coverage!',
+        timestamp: 'Aug 03, 11:00 AM'
+      }
+    ]
+  }
+];

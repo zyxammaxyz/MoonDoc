@@ -1,0 +1,6 @@
+{
+  "name": "MoonDoc",
+  "description": "Medical resident moonlighting platform with opportunity map discovery, comprehensive credential vault, and hospital application passport.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
