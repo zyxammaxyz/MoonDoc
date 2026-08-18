@@ -48,9 +48,6 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="text-2xl font-bold tracking-tight text-blue-900">
                   Moon<span className="text-blue-600">Doc</span>
                 </span>
-                <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200 rounded-md">
-                  Resident Portal
-                </span>
               </div>
               <p className="text-xs text-slate-500 hidden xl:block">
                 Physician Moonlighting and Document Vault
@@ -196,14 +193,9 @@ export const Header: React.FC<HeaderProps> = ({
               className="flex items-center space-x-3 px-3.5 py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-2xl cursor-pointer transition-all duration-200 group"
             >
               <div className="text-right hidden xl:block">
-                <div className="flex items-center justify-end space-x-1.5">
-                  <span className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                    Dr. {profile.firstName} {profile.lastName}
-                  </span>
-                  <span className="px-1.5 py-0.2 text-[9px] font-bold bg-blue-100 text-blue-800 border border-blue-200 rounded">
-                    {profile.pgyLevel}
-                  </span>
-                </div>
+                <span className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                  Dr. {profile.firstName} {profile.lastName}
+                </span>
                 <p className="text-[10px] text-slate-500 truncate max-w-[180px]">
                   {profile.residencyProgram.split('/')[0]}
                 </p>
