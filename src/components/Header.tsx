@@ -190,13 +190,13 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Profile Pill */}
             <div
               onClick={() => setActiveTab('vault')}
-              className="flex items-center space-x-3 px-3.5 py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-2xl cursor-pointer transition-all duration-200 group"
+              className="flex items-center px-3.5 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-2xl cursor-pointer transition-all duration-200 group"
             >
-              <div className="text-right hidden xl:block">
-                <span className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+              <div className="text-right hidden xl:block leading-tight">
+                <p className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors whitespace-nowrap truncate max-w-[200px]">
                   Dr. {profile.firstName} {profile.lastName}
-                </span>
-                <p className="text-[10px] text-slate-500 truncate max-w-[180px]">
+                </p>
+                <p className="text-[10px] text-slate-500 truncate max-w-[200px]">
                   {profile.residencyProgram.split('/')[0]}
                 </p>
               </div>
