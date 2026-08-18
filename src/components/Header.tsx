@@ -52,14 +52,14 @@ export const Header: React.FC<HeaderProps> = ({
                   Resident Portal
                 </span>
               </div>
-              <p className="text-xs text-slate-500 hidden sm:block">
+              <p className="text-xs text-slate-500 hidden xl:block">
                 Physician Moonlighting and Document Vault
               </p>
             </div>
           </div>
 
           {/* Navigation Links */}
-          <nav className="hidden lg:flex items-center space-x-1 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200">
+          <nav className="hidden xl:flex items-center space-x-1 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200 overflow-x-auto min-w-0">
             <button
               onClick={() => setActiveTab('map')}
               className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
@@ -182,7 +182,7 @@ export const Header: React.FC<HeaderProps> = ({
             {onSwitchToAdmin && (
               <button
                 onClick={onSwitchToAdmin}
-                className="hidden sm:flex items-center space-x-1.5 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-blue-300 hover:text-white rounded-xl text-xs font-bold transition-all border border-slate-800 shadow-xs cursor-pointer"
+                className="hidden xl:flex items-center space-x-1.5 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-blue-300 hover:text-white rounded-xl text-xs font-bold transition-all border border-slate-800 shadow-xs cursor-pointer"
                 title="Switch to Hospital Admin / MSO View"
               >
                 <Building2 className="w-3.5 h-3.5 text-blue-400" />
@@ -195,7 +195,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => setActiveTab('vault')}
               className="flex items-center space-x-3 p-1.5 pl-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-2xl cursor-pointer transition-all duration-200 group"
             >
-              <div className="text-right hidden sm:block">
+              <div className="text-right hidden xl:block">
                 <div className="flex items-center justify-end space-x-1.5">
                   <span className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
                     Dr. {profile.firstName} {profile.lastName}
@@ -337,8 +337,8 @@ export const Header: React.FC<HeaderProps> = ({
 
         </div>
 
-        {/* Mobile Navigation Row */}
-        <div className="flex lg:hidden items-center justify-around py-2.5 border-t border-slate-200 text-xs overflow-x-auto gap-1">
+        {/* Compact Navigation Row (shown below the xl breakpoint, where the full nav would overflow) */}
+        <div className="flex xl:hidden items-center justify-around py-2.5 border-t border-slate-200 text-xs overflow-x-auto gap-1">
           <button
             onClick={() => setActiveTab('map')}
             className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-lg font-medium whitespace-nowrap ${
