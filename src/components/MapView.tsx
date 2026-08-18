@@ -263,7 +263,7 @@ export const MapView: React.FC<MapViewProps> = ({ shifts, onSelectShift, userDoc
        {/* Sidebar Controls & Shift List - Fully Scrollable Container */}
       <div
         ref={sidebarRef}
-        className="w-full md:w-[420px] lg:w-[480px] h-1/2 md:h-full bg-white border-r border-slate-200 overflow-y-auto custom-scrollbar z-20 shadow-sm flex flex-col"
+        className="w-full md:w-2/5 h-1/2 md:h-full bg-white border-r border-slate-200 overflow-y-auto custom-scrollbar z-20 shadow-sm flex flex-col"
       >
         {/* Sticky Top Bar (Search + Location + Filter Toggle Header) */}
         <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-md p-3.5 border-b border-slate-200 space-y-2.5 shadow-xs">
