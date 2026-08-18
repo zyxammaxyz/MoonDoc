@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { ResidentProfile, CredentialDocument, DocumentCategory, PGYLevel, MedicalSpecialty } from '../types';
 import { SOCAL_RESIDENCY_PROGRAMS } from '../data/mockData';
+import { isSupabaseConfigured } from '../lib/supabaseClient';
+import { uploadHeadshot, uploadCredentialDocumentFile } from '../lib/residentApi';
 import {
   ShieldCheck,
   UploadCloud,
@@ -69,6 +71,7 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
   const [customDocNumber, setCustomDocNumber] = useState('');
   const [customExpirationDate, setCustomExpirationDate] = useState('2027-12-31');
   const [customFileName, setCustomFileName] = useState('');
+  const [customFileObj, setCustomFileObj] = useState<File | null>(null);
   const [isCustomDragging, setIsCustomDragging] = useState(false);
   const [isSubmittingCustom, setIsSubmittingCustom] = useState(false);
   const [customSuccessMsg, setCustomSuccessMsg] = useState<string | null>(null);
@@ -125,7 +128,7 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
     }, 800);
   };
 
-  const handleCustomDocSubmit = (e: React.FormEvent) => {
+  const handleCustomDocSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!customDocTitle.trim()) {
       alert('Please enter a document title so hospital admins know what it is.');
@@ -133,17 +136,23 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
     }
 
     setIsSubmittingCustom(true);
-
-    setTimeout(() => {
+    try {
       const titleClean = customDocTitle.trim();
+      const docId = `doc_custom_${Date.now()}`;
+
+      let fileUrl = 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=500&auto=format&fit=crop&q=60';
+      if (customFileObj && isSupabaseConfigured) {
+        fileUrl = await uploadCredentialDocumentFile(profile.id, docId, customFileObj);
+      }
+
       const newDoc: CredentialDocument = {
-        id: `doc_custom_${Date.now()}`,
+        id: docId,
         name: titleClean,
         category: 'other',
         requiredForTier1: false,
         status: 'verified',
-        fileName: customFileName || `${titleClean.replace(/\s+/g, '_')}_2026.pdf`,
-        fileUrl: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=500&auto=format&fit=crop&q=60',
+        fileName: customFileName || customFileObj?.name || `${titleClean.replace(/\s+/g, '_')}_2026.pdf`,
+        fileUrl,
         uploadDate: new Date().toISOString().split('T')[0],
         expirationDate: customExpirationDate || '2027-12-31',
         docNumber: customDocNumber || `CUST-${Math.floor(100000 + Math.random() * 900000)}`,
@@ -159,13 +168,17 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
       setCustomDocNumber('');
       setCustomExpirationDate('2027-12-31');
       setCustomFileName('');
-      setIsSubmittingCustom(false);
+      setCustomFileObj(null);
       setCustomSuccessMsg(`"${titleClean}" successfully saved to your MoonDoc Passport! You can add another document below.`);
 
       setTimeout(() => {
         setCustomSuccessMsg(null);
       }, 6000);
-    }, 500);
+    } catch (err) {
+      console.error('Failed to upload custom document', err);
+    } finally {
+      setIsSubmittingCustom(false);
+    }
   };
 
   // Calculate completion percentage
@@ -202,12 +215,35 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
     setIsEditingProfile(false);
   };
 
-  // Headshot selector
-  const handleHeadshotUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [isUploadingHeadshot, setIsUploadingHeadshot] = useState(false);
+
+  // Headshot selector — uploads to real storage so the photo survives a
+  // refresh / different device, instead of the old blob: URL that only
+  // worked in the current browser tab.
+  const handleHeadshotUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setFormProfile({ ...formProfile, headshotUrl: imageUrl });
+    if (!file) return;
+
+    // Show an instant local preview while the real upload happens.
+    const previewUrl = URL.createObjectURL(file);
+    setFormProfile((prev) => ({ ...prev, headshotUrl: previewUrl }));
+
+    if (!isSupabaseConfigured) return;
+
+    setIsUploadingHeadshot(true);
+    try {
+      const realUrl = await uploadHeadshot(profile.id, file);
+      setFormProfile((prev) => ({ ...prev, headshotUrl: realUrl }));
+      // If this upload happened outside the "Edit Profile" modal (the
+      // hover-to-upload avatar in the header), persist it immediately
+      // rather than waiting on a "Save Profile" click that may never come.
+      if (!isEditingProfile) {
+        onUpdateProfile({ ...profile, headshotUrl: realUrl });
+      }
+    } catch (err) {
+      console.error('Failed to upload headshot', err);
+    } finally {
+      setIsUploadingHeadshot(false);
     }
   };
 
@@ -221,21 +257,26 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
     setUploadIssuer(doc?.issuer || 'Massachusetts Dept of Health');
   };
 
-  // Handle Document Upload Submission
-  const handleUploadSubmit = (e: React.FormEvent) => {
+  // Handle Document Upload Submission — uploads the real file to storage
+  // when one was attached, instead of always faking the same stock photo.
+  const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeUploadDocId) return;
 
     setIsUploading(true);
+    try {
+      let fileUrl = 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=500&auto=format&fit=crop&q=60';
+      if (uploadedFileObj && isSupabaseConfigured) {
+        fileUrl = await uploadCredentialDocumentFile(profile.id, activeUploadDocId, uploadedFileObj);
+      }
 
-    setTimeout(() => {
       const updatedDocs = profile.documents.map((d) => {
         if (d.id === activeUploadDocId) {
           return {
             ...d,
             status: 'verified' as const,
-            fileName: uploadFileName || `${d.name.replace(/\s+/g, '_')}_2026.pdf`,
-            fileUrl: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=500&auto=format&fit=crop&q=60',
+            fileName: uploadFileName || uploadedFileObj?.name || `${d.name.replace(/\s+/g, '_')}_2026.pdf`,
+            fileUrl,
             uploadDate: new Date().toISOString().split('T')[0],
             expirationDate: uploadExpirationDate || '2027-08-31',
             docNumber: uploadDocNumber || 'DOC-99201-VERIFIED',
@@ -245,11 +286,14 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
         return d;
       });
 
-      const updatedProf = { ...profile, documents: updatedDocs };
-      onUpdateProfile(updatedProf);
-      setIsUploading(false);
+      onUpdateProfile({ ...profile, documents: updatedDocs });
       setActiveUploadDocId(null);
-    }, 600);
+      setUploadedFileObj(null);
+    } catch (err) {
+      console.error('Failed to upload document', err);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   // Handle Quick Delete / Reset Document
@@ -908,6 +952,7 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
                 const file = e.dataTransfer.files?.[0];
                 if (file) {
                   setCustomFileName(file.name);
+                  setCustomFileObj(file);
                 }
               }}
               className={`border-2 border-dashed rounded-2xl p-5 text-center transition-all cursor-pointer ${
@@ -925,6 +970,7 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
                   const file = e.target.files?.[0];
                   if (file) {
                     setCustomFileName(file.name);
+                    setCustomFileObj(file);
                   }
                 }}
                 className="hidden"
