@@ -23,6 +23,7 @@ import {
   Settings2,
   CheckCheck,
   Undo2,
+  Search,
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { resendSignUpCode, signOutResident, getCurrentSession } from '../lib/residentApi';
@@ -127,6 +128,9 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
   // confirmed every requirement is met) -- this is a human call, never
   // flipped automatically just because documents were uploaded.
   const [candidateSubTab, setCandidateSubTab] = useState<'interested' | 'verified'>('interested');
+  // Filters the always-visible candidate list by name/program/job so an MSO
+  // tracking a lot of residents at once can jump straight to one.
+  const [candidateSearch, setCandidateSearch] = useState('');
   const [isTogglingVerified, setIsTogglingVerified] = useState(false);
   // The opened candidate's job-specific requirements checklist (only
   // populated when their thread is tied to a specific posted job).
@@ -713,7 +717,7 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-8">
+      <main className={`mx-auto px-6 py-8 ${dashboardView === 'candidates' ? 'max-w-6xl' : 'max-w-4xl'}`}>
         <div className="flex mb-6 bg-slate-100 rounded-xl p-1 max-w-sm">
           <button
             onClick={() => { setDashboardView('sites'); setSelectedThread(null); }}
@@ -1129,296 +1133,339 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
             )}
           </>
         ) : dashboardView === 'candidates' ? (
-          selectedThread ? (
-            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col h-[600px]">
-              <div className="p-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
-                <div className="flex items-center space-x-3">
+          <div className="flex gap-4 h-[calc(100vh-260px)] min-h-[560px]">
+            {/* Resident list -- always visible on the left so the MSO can
+                jump between candidates without losing their place, even
+                when tracking a lot of residents at once. */}
+            <div className="w-72 shrink-0 bg-white border border-slate-200 rounded-2xl flex flex-col overflow-hidden">
+              <div className="p-3 border-b border-slate-200 space-y-2.5 shrink-0">
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={candidateSearch}
+                    onChange={(e) => setCandidateSearch(e.target.value)}
+                    placeholder="Search residents..."
+                    className="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+                <div className="flex bg-slate-100 rounded-xl p-1">
                   <button
-                    onClick={() => setSelectedThread(null)}
-                    className="p-1.5 hover:bg-slate-800 rounded-lg cursor-pointer"
+                    onClick={() => setCandidateSubTab('interested')}
+                    className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-colors cursor-pointer ${
+                      candidateSubTab === 'interested' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'
+                    }`}
                   >
-                    <ArrowLeft className="w-4 h-4" />
+                    Interested ({interests.filter((t) => !t.verified).length})
                   </button>
-                  <div>
-                    <h3 className="text-sm font-bold">{selectedThread.residentName}</h3>
-                    <p className="text-[11px] text-slate-300">
-                      {selectedThread.residentProgram || 'Resident'} ·{' '}
-                      {selectedThread.shiftTitle
-                        ? `Applied for "${selectedThread.shiftTitle}" at ${selectedThread.hospitalName}`
-                        : `Interested in ${selectedThread.hospitalName}`}
-                    </p>
-                  </div>
+                  <button
+                    onClick={() => setCandidateSubTab('verified')}
+                    className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-colors cursor-pointer ${
+                      candidateSubTab === 'verified' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'
+                    }`}
+                  >
+                    Verified ({interests.filter((t) => t.verified).length})
+                  </button>
                 </div>
-
-                <button
-                  onClick={() => handleToggleVerified(selectedThread)}
-                  disabled={isTogglingVerified}
-                  className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-bold cursor-pointer disabled:opacity-50 shrink-0 ${
-                    selectedThread.verified
-                      ? 'bg-slate-700 hover:bg-slate-600 text-white'
-                      : 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                  }`}
-                >
-                  {isTogglingVerified ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : selectedThread.verified ? (
-                    <Undo2 className="w-3.5 h-3.5" />
-                  ) : (
-                    <CheckCheck className="w-3.5 h-3.5" />
-                  )}
-                  <span>{selectedThread.verified ? 'Verified — Move Back' : 'Mark as Verified'}</span>
-                </button>
               </div>
 
-              {selectedThread.shiftId && (
-                <div className="p-3.5 bg-slate-50 border-b border-slate-200">
-                  <div className="flex items-center space-x-1.5 mb-2">
-                    <Settings2 className="w-3.5 h-3.5 text-blue-600" />
-                    <span className="text-xs font-bold text-slate-800">Requirements for this job</span>
-                  </div>
-                  {isLoadingThreadRequirements ? (
-                    <div className="flex items-center space-x-2 text-xs text-slate-400">
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Checking documents…</span>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {(() => {
-                        const jobShift = shifts.find((s) => s.id === selectedThread.shiftId);
-                        const standardChecklist = (jobShift?.requiredDocIds || []).map((docId) => {
-                          const doc = candidateProfile?.documents.find((d) => d.id === docId);
-                          return { docId, name: doc?.name || docId, met: doc?.status === 'verified' };
-                        });
-                        return (
-                          <>
-                            {standardChecklist.length > 0 && (
-                              <div className="flex flex-wrap gap-1.5">
-                                {standardChecklist.map((item) => (
-                                  <span
-                                    key={item.docId}
-                                    className={`px-2 py-1 rounded-lg border text-[10px] font-bold ${
-                                      item.met
-                                        ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                                        : 'bg-amber-50 border-amber-200 text-amber-800'
-                                    }`}
-                                  >
-                                    {item.met ? '✓' : '✗'} {item.name}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                            {threadCustomDocRequests.length > 0 && (
-                              <div className="flex flex-wrap gap-1.5">
-                                {threadCustomDocRequests.map((req) => {
-                                  const submitted = threadCustomDocSubmissions.find(
-                                    (s) => s.requestId === req.id && s.fileUrl
-                                  );
-                                  return submitted ? (
-                                    <a
-                                      key={req.id}
-                                      href={submitted.fileUrl}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="px-2 py-1 rounded-lg border text-[10px] font-bold bg-emerald-50 border-emerald-200 text-emerald-800 underline hover:no-underline"
-                                    >
-                                      ✓ {req.label}
-                                    </a>
-                                  ) : (
-                                    <span
-                                      key={req.id}
-                                      className="px-2 py-1 rounded-lg border text-[10px] font-bold bg-amber-50 border-amber-200 text-amber-800"
-                                    >
-                                      ✗ {req.label}
-                                    </span>
-                                  );
-                                })}
-                              </div>
-                            )}
-                            {standardChecklist.length === 0 && threadCustomDocRequests.length === 0 && (
-                              <p className="text-[11px] text-slate-400">No specific document requirements set for this job yet.</p>
-                            )}
-                          </>
-                        );
-                      })()}
-                    </div>
-                  )}
-                </div>
-              )}
+              <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
+                {(() => {
+                  const q = candidateSearch.trim().toLowerCase();
+                  const list = interests
+                    .filter((t) => (candidateSubTab === 'verified' ? t.verified : !t.verified))
+                    .filter(
+                      (t) =>
+                        !q ||
+                        t.residentName.toLowerCase().includes(q) ||
+                        (t.residentProgram || '').toLowerCase().includes(q) ||
+                        (t.shiftTitle || '').toLowerCase().includes(q)
+                    );
 
-              <div className="p-3.5 bg-white border-b border-slate-200">
-                <div className="flex items-center space-x-1.5 mb-2">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                  <span className="text-xs font-bold text-slate-800">MoonCall Passport</span>
-                </div>
-                {isLoadingCandidateProfile ? (
-                  <div className="flex items-center space-x-2 text-xs text-slate-400">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Loading credential documents…</span>
-                  </div>
-                ) : !candidateProfile ? (
-                  <p className="text-xs text-slate-400">Could not load this candidate's passport.</p>
-                ) : candidateProfile.documents.length === 0 ? (
-                  <p className="text-xs text-slate-400">No documents uploaded yet.</p>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {candidateProfile.documents.map((doc) => (
-                      <a
-                        key={doc.id}
-                        href={doc.fileUrl || undefined}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={(e) => { if (!doc.fileUrl) e.preventDefault(); }}
-                        className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg border text-[11px] font-semibold transition-colors ${
-                          doc.fileUrl
-                            ? 'bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100 cursor-pointer'
-                            : 'bg-slate-50 border-slate-200 text-slate-400 cursor-default'
-                        }`}
-                        title={doc.fileUrl ? 'Open document' : 'Not uploaded yet'}
-                      >
-                        <FileText className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate max-w-[150px]">{doc.name}</span>
-                        <span
-                          className={`px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase ${
-                            doc.status === 'verified'
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : doc.status === 'pending'
-                              ? 'bg-amber-100 text-amber-800'
-                              : 'bg-slate-200 text-slate-600'
-                          }`}
-                        >
-                          {doc.status}
-                        </span>
-                        {doc.fileUrl && <ExternalLink className="w-3 h-3 shrink-0" />}
-                      </a>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex-1 p-5 overflow-y-auto space-y-3 bg-slate-50/60">
-                {isLoadingThread ? (
-                  <div className="flex items-center justify-center h-full">
-                    <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
-                  </div>
-                ) : threadMessages.length === 0 ? (
-                  <div className="text-center py-12 text-slate-400 text-xs">No messages yet.</div>
-                ) : (
-                  threadMessages.map((msg) => {
-                    const isHospital = msg.senderRole === 'hospital';
+                  if (list.length === 0) {
                     return (
-                      <div key={msg.id} className={`flex flex-col ${isHospital ? 'items-end' : 'items-start'}`}>
-                        <div
-                          className={`max-w-[75%] p-3 rounded-2xl text-xs leading-relaxed ${
-                            isHospital
-                              ? 'bg-blue-600 text-white rounded-tr-none'
-                              : 'bg-white border border-slate-200 text-slate-900 rounded-tl-none'
-                          }`}
-                        >
-                          <div className={`flex items-center justify-between gap-4 mb-1 pb-1 border-b ${isHospital ? 'border-blue-500 text-blue-100' : 'border-slate-100 text-slate-400'}`}>
-                            <span className="font-bold text-[10px]">{msg.senderName}</span>
-                            <span className="text-[9px]">{msg.timestamp}</span>
-                          </div>
-                          <div className="whitespace-pre-line font-medium">{msg.text}</div>
-                        </div>
+                      <div className="text-center py-12 px-4">
+                        <Users className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                        <p className="text-slate-700 font-bold text-xs">
+                          {q
+                            ? 'No residents match that search'
+                            : candidateSubTab === 'verified'
+                            ? 'No verified candidates yet'
+                            : 'No interested residents yet'}
+                        </p>
+                        {!q && (
+                          <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                            {candidateSubTab === 'verified'
+                              ? "Mark a candidate as Verified once they've met every requirement."
+                              : "When a resident expresses interest in one of your sites, they'll show up here."}
+                          </p>
+                        )}
                       </div>
                     );
-                  })
-                )}
-              </div>
+                  }
 
-              <form onSubmit={handleSendChat} className="p-3 bg-white border-t border-slate-200 flex items-center space-x-2">
-                <input
-                  type="text"
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  placeholder={`Message ${selectedThread.residentName}...`}
-                  className="flex-1 bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-xs font-medium focus:outline-none focus:border-blue-600"
-                />
-                <button
-                  type="submit"
-                  disabled={isSendingChat || !chatInput.trim()}
-                  className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 cursor-pointer"
-                >
-                  {isSendingChat ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                  <span>Send</span>
-                </button>
-              </form>
-            </div>
-          ) : (
-            <>
-              <div className="flex mb-4 bg-slate-100 rounded-xl p-1 max-w-xs">
-                <button
-                  onClick={() => setCandidateSubTab('interested')}
-                  className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                    candidateSubTab === 'interested' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'
-                  }`}
-                >
-                  Interested ({interests.filter((t) => !t.verified).length})
-                </button>
-                <button
-                  onClick={() => setCandidateSubTab('verified')}
-                  className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                    candidateSubTab === 'verified' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'
-                  }`}
-                >
-                  Verified ({interests.filter((t) => t.verified).length})
-                </button>
-              </div>
-
-              {interests.filter((t) => (candidateSubTab === 'verified' ? t.verified : !t.verified)).length === 0 ? (
-                <div className="text-center py-16 bg-white border border-slate-200 rounded-2xl">
-                  <Users className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                  <p className="text-slate-700 font-bold text-sm">
-                    {candidateSubTab === 'verified' ? 'No verified candidates yet' : 'No interested residents yet'}
-                  </p>
-                  <p className="text-xs text-slate-500 mt-1">
-                    {candidateSubTab === 'verified'
-                      ? 'Mark a candidate as Verified from their chat once they\'ve met every requirement.'
-                      : "When a resident expresses interest in one of your sites, they'll show up here."}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {interests
-                    .filter((t) => (candidateSubTab === 'verified' ? t.verified : !t.verified))
-                    .map((thread) => (
-                      <div
+                  return list.map((thread) => {
+                    const isActive = selectedThread?.id === thread.id;
+                    return (
+                      <button
                         key={thread.id}
                         onClick={() => handleOpenThread(thread)}
-                        className="bg-white border border-slate-200 rounded-2xl p-4 flex items-start justify-between cursor-pointer hover:border-blue-300 transition-colors"
+                        className={`w-full text-left p-3 transition-colors cursor-pointer ${
+                          isActive ? 'bg-blue-50' : 'hover:bg-slate-50'
+                        }`}
                       >
-                        <div className="flex items-start space-x-3">
-                          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                            <MessageSquare className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <div className="flex items-center space-x-2">
-                              <h3 className="font-bold text-sm text-slate-900">{thread.residentName}</h3>
-                              {thread.status === 'new' && (
-                                <span className="flex items-center space-x-1 text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-md">
-                                  <Sparkles className="w-3 h-3" />
-                                  <span>New</span>
-                                </span>
-                              )}
-                              {thread.verified && (
-                                <span className="flex items-center space-x-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">
-                                  <CheckCheck className="w-3 h-3" />
-                                  <span>Verified</span>
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs text-slate-500 mt-0.5">{thread.residentProgram || 'Resident'}</p>
-                            <p className="text-[11px] text-blue-700 font-semibold mt-1">
-                              {thread.shiftTitle ? `Applied for "${thread.shiftTitle}"` : `Interested in ${thread.hospitalName}`}
-                            </p>
+                        <div className="flex items-center justify-between gap-2">
+                          <h4 className={`font-bold text-xs truncate ${isActive ? 'text-blue-800' : 'text-slate-900'}`}>
+                            {thread.residentName}
+                          </h4>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {thread.status === 'new' && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-red-500" title="New" />
+                            )}
+                            {thread.verified && <CheckCheck className="w-3 h-3 text-emerald-600" />}
                           </div>
                         </div>
+                        <p className="text-[11px] text-slate-500 truncate mt-0.5">{thread.residentProgram || 'Resident'}</p>
+                        <p className="text-[10px] text-blue-700 font-semibold truncate mt-0.5">
+                          {thread.shiftTitle ? `Applied: ${thread.shiftTitle}` : `Interested in ${thread.hospitalName}`}
+                        </p>
+                      </button>
+                    );
+                  });
+                })()}
+              </div>
+            </div>
+
+            {/* Detail: MoonCall Passport on the left, chat on the right --
+                per the request to split these side by side instead of
+                stacking them, once a resident is picked from the list. */}
+            {selectedThread ? (
+              <div className="flex-1 flex gap-4 min-w-0">
+                {/* Passport panel */}
+                <div className="w-[340px] shrink-0 bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col">
+                  <div className="p-4 bg-slate-900 text-white border-b border-slate-800 shrink-0">
+                    <h3 className="text-sm font-bold">{selectedThread.residentName}</h3>
+                    <p className="text-[11px] text-slate-300 mt-0.5">
+                      {selectedThread.residentProgram || 'Resident'} ·{' '}
+                      {selectedThread.shiftTitle
+                        ? `Applied for "${selectedThread.shiftTitle}"`
+                        : `Interested in ${selectedThread.hospitalName}`}
+                    </p>
+                    <button
+                      onClick={() => handleToggleVerified(selectedThread)}
+                      disabled={isTogglingVerified}
+                      className={`mt-3 w-full flex items-center justify-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-bold cursor-pointer disabled:opacity-50 ${
+                        selectedThread.verified
+                          ? 'bg-slate-700 hover:bg-slate-600 text-white'
+                          : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                      }`}
+                    >
+                      {isTogglingVerified ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : selectedThread.verified ? (
+                        <Undo2 className="w-3.5 h-3.5" />
+                      ) : (
+                        <CheckCheck className="w-3.5 h-3.5" />
+                      )}
+                      <span>{selectedThread.verified ? 'Verified — Move Back' : 'Mark as Verified'}</span>
+                    </button>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto">
+                    {selectedThread.shiftId && (
+                      <div className="p-3.5 bg-slate-50 border-b border-slate-200">
+                        <div className="flex items-center space-x-1.5 mb-2">
+                          <Settings2 className="w-3.5 h-3.5 text-blue-600" />
+                          <span className="text-xs font-bold text-slate-800">Requirements for this job</span>
+                        </div>
+                        {isLoadingThreadRequirements ? (
+                          <div className="flex items-center space-x-2 text-xs text-slate-400">
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <span>Checking documents…</span>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            {(() => {
+                              const jobShift = shifts.find((s) => s.id === selectedThread.shiftId);
+                              const standardChecklist = (jobShift?.requiredDocIds || []).map((docId) => {
+                                const doc = candidateProfile?.documents.find((d) => d.id === docId);
+                                return { docId, name: doc?.name || docId, met: doc?.status === 'verified' };
+                              });
+                              return (
+                                <>
+                                  {standardChecklist.length > 0 && (
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {standardChecklist.map((item) => (
+                                        <span
+                                          key={item.docId}
+                                          className={`px-2 py-1 rounded-lg border text-[10px] font-bold ${
+                                            item.met
+                                              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                                              : 'bg-amber-50 border-amber-200 text-amber-800'
+                                          }`}
+                                        >
+                                          {item.met ? '✓' : '✗'} {item.name}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                  {threadCustomDocRequests.length > 0 && (
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {threadCustomDocRequests.map((req) => {
+                                        const submitted = threadCustomDocSubmissions.find(
+                                          (s) => s.requestId === req.id && s.fileUrl
+                                        );
+                                        return submitted ? (
+                                          <a
+                                            key={req.id}
+                                            href={submitted.fileUrl}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="px-2 py-1 rounded-lg border text-[10px] font-bold bg-emerald-50 border-emerald-200 text-emerald-800 underline hover:no-underline"
+                                          >
+                                            ✓ {req.label}
+                                          </a>
+                                        ) : (
+                                          <span
+                                            key={req.id}
+                                            className="px-2 py-1 rounded-lg border text-[10px] font-bold bg-amber-50 border-amber-200 text-amber-800"
+                                          >
+                                            ✗ {req.label}
+                                          </span>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                  {standardChecklist.length === 0 && threadCustomDocRequests.length === 0 && (
+                                    <p className="text-[11px] text-slate-400">No specific document requirements set for this job yet.</p>
+                                  )}
+                                </>
+                              );
+                            })()}
+                          </div>
+                        )}
                       </div>
-                    ))}
+                    )}
+
+                    <div className="p-3.5">
+                      <div className="flex items-center space-x-1.5 mb-2">
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="text-xs font-bold text-slate-800">MoonCall Passport</span>
+                      </div>
+                      {isLoadingCandidateProfile ? (
+                        <div className="flex items-center space-x-2 text-xs text-slate-400">
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Loading credential documents…</span>
+                        </div>
+                      ) : !candidateProfile ? (
+                        <p className="text-xs text-slate-400">Could not load this candidate's passport.</p>
+                      ) : candidateProfile.documents.length === 0 ? (
+                        <p className="text-xs text-slate-400">No documents uploaded yet.</p>
+                      ) : (
+                        <div className="flex flex-wrap gap-2">
+                          {candidateProfile.documents.map((doc) => (
+                            <a
+                              key={doc.id}
+                              href={doc.fileUrl || undefined}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={(e) => { if (!doc.fileUrl) e.preventDefault(); }}
+                              className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg border text-[11px] font-semibold transition-colors ${
+                                doc.fileUrl
+                                  ? 'bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100 cursor-pointer'
+                                  : 'bg-slate-50 border-slate-200 text-slate-400 cursor-default'
+                              }`}
+                              title={doc.fileUrl ? 'Open document' : 'Not uploaded yet'}
+                            >
+                              <FileText className="w-3.5 h-3.5 shrink-0" />
+                              <span className="truncate max-w-[150px]">{doc.name}</span>
+                              <span
+                                className={`px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase ${
+                                  doc.status === 'verified'
+                                    ? 'bg-emerald-100 text-emerald-800'
+                                    : doc.status === 'pending'
+                                    ? 'bg-amber-100 text-amber-800'
+                                    : 'bg-slate-200 text-slate-600'
+                                }`}
+                              >
+                                {doc.status}
+                              </span>
+                              {doc.fileUrl && <ExternalLink className="w-3 h-3 shrink-0" />}
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              )}
-            </>
-          )
+
+                {/* Chat panel */}
+                <div className="flex-1 min-w-0 bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col">
+                  <div className="px-4 py-2.5 bg-white border-b border-slate-200 flex items-center justify-between shrink-0">
+                    <span className="text-xs font-bold text-slate-800">Conversation</span>
+                    <span className="text-[10px] text-slate-400">{threadMessages.length} message{threadMessages.length === 1 ? '' : 's'}</span>
+                  </div>
+
+                  <div className="flex-1 p-5 overflow-y-auto space-y-3 bg-slate-50/60">
+                    {isLoadingThread ? (
+                      <div className="flex items-center justify-center h-full">
+                        <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
+                      </div>
+                    ) : threadMessages.length === 0 ? (
+                      <div className="text-center py-12 text-slate-400 text-xs">No messages yet.</div>
+                    ) : (
+                      threadMessages.map((msg) => {
+                        const isHospital = msg.senderRole === 'hospital';
+                        return (
+                          <div key={msg.id} className={`flex flex-col ${isHospital ? 'items-end' : 'items-start'}`}>
+                            <div
+                              className={`max-w-[75%] p-3 rounded-2xl text-xs leading-relaxed ${
+                                isHospital
+                                  ? 'bg-blue-600 text-white rounded-tr-none'
+                                  : 'bg-white border border-slate-200 text-slate-900 rounded-tl-none'
+                              }`}
+                            >
+                              <div className={`flex items-center justify-between gap-4 mb-1 pb-1 border-b ${isHospital ? 'border-blue-500 text-blue-100' : 'border-slate-100 text-slate-400'}`}>
+                                <span className="font-bold text-[10px]">{msg.senderName}</span>
+                                <span className="text-[9px]">{msg.timestamp}</span>
+                              </div>
+                              <div className="whitespace-pre-line font-medium">{msg.text}</div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  <form onSubmit={handleSendChat} className="p-3 bg-white border-t border-slate-200 flex items-center space-x-2 shrink-0">
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      placeholder={`Message ${selectedThread.residentName}...`}
+                      className="flex-1 bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-xs font-medium focus:outline-none focus:border-blue-600"
+                    />
+                    <button
+                      type="submit"
+                      disabled={isSendingChat || !chatInput.trim()}
+                      className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 cursor-pointer"
+                    >
+                      {isSendingChat ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                      <span>Send</span>
+                    </button>
+                  </form>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 flex items-center justify-center bg-white border border-slate-200 rounded-2xl text-center p-10">
+                <div>
+                  <Users className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                  <p className="text-slate-700 font-bold text-sm">Select a resident to view their passport &amp; chat</p>
+                  <p className="text-xs text-slate-500 mt-1">Pick anyone from the list on the left to see their MoonCall Passport and message them directly.</p>
+                </div>
+              </div>
+            )}
+          </div>
         ) : (
           <>
         <div className="flex items-center justify-between mb-4">
