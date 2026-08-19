@@ -450,7 +450,7 @@ export const ResidentCommunications: React.FC<ResidentCommunicationsProps> = ({
                             }`}
                           >
                             <span className="font-bold text-[10px]">
-                              {isResident ? 'You (Dr. Jessie Smith)' : msg.senderName}
+                              {isResident ? `You (${msg.senderName})` : msg.senderName}
                             </span>
                             <span className="text-[9px]">{msg.timestamp}</span>
                           </div>
