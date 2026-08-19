@@ -56,7 +56,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Navigation Links */}
-          <nav className="hidden xl:flex flex-1 justify-center items-center space-x-1 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200 overflow-x-auto min-w-0">
+          <nav className="hidden xl:flex flex-1 justify-start items-center space-x-1 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200 overflow-x-auto min-w-0">
             <button
               onClick={() => setActiveTab('map')}
               className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 shrink-0 whitespace-nowrap ${
@@ -319,7 +319,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Compact Navigation Row (shown below the xl breakpoint, where the full nav would overflow) */}
-        <div className="flex xl:hidden items-center justify-around py-2.5 border-t border-slate-200 text-xs overflow-x-auto gap-1">
+        <div className="flex xl:hidden items-center justify-start py-2.5 border-t border-slate-200 text-xs overflow-x-auto gap-1">
           <button
             onClick={() => setActiveTab('map')}
             className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-lg font-medium whitespace-nowrap ${
