@@ -45,11 +45,11 @@ interface LandingPageProps {
 // Both demo experiences (Resident + Hospital MSO Admin) are hidden from the
 // public site now that it's live at a real domain. They're only reachable by
 // whoever knows the secret preview link below, or by clicking the footer
-// copyright text 5 times in a row. Change PREVIEW_ACCESS_CODE any time to
-// invalidate old links.
+// copyright text 5 times in a row — and neither is remembered across visits,
+// so every fresh page load starts locked again. Change PREVIEW_ACCESS_CODE
+// any time to invalidate old links.
 const PREVIEW_ACCESS_PARAM = 'preview';
 const PREVIEW_ACCESS_CODE = 'mooncall-2026';
-const PREVIEW_UNLOCK_STORAGE_KEY = 'mc_preview_unlocked';
 
 interface CartoonHospital {
   id: string;
@@ -127,39 +127,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
 
   // Both demo modes (Resident + Hospital MSO Admin) stay hidden from public
   // visitors until unlocked via the secret preview link or footer tap combo.
+  // Deliberately NOT persisted anywhere (no localStorage/sessionStorage) —
+  // every fresh page load starts locked again, even on the same browser/device.
   const [isDemoUnlocked, setIsDemoUnlocked] = useState<boolean>(false);
   const secretTapCountRef = useRef<number>(0);
   const secretTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const unlockDemoAccess = () => {
     setIsDemoUnlocked(true);
-    try {
-      window.localStorage.setItem(PREVIEW_UNLOCK_STORAGE_KEY, '1');
-    } catch {
-      // Storage may be unavailable (e.g. private browsing) — the unlock
-      // still holds for the rest of this page visit either way.
-    }
   };
 
   // Secret entry #1: a link containing ?preview=<code>. Checked once on
   // mount, then immediately scrubbed from the visible URL. Secret entry #2:
   // tapping the footer copyright line 5 times within ~2.5s of each other.
+  // Reloading the page (or opening it fresh) always starts locked again.
   useEffect(() => {
-    let storedUnlocked = false;
-    try {
-      storedUnlocked = window.localStorage.getItem(PREVIEW_UNLOCK_STORAGE_KEY) === '1';
-    } catch {
-      storedUnlocked = false;
-    }
-
     const params = new URLSearchParams(window.location.search);
     const hasSecretLink = params.get(PREVIEW_ACCESS_PARAM) === PREVIEW_ACCESS_CODE;
 
-    if (hasSecretLink || storedUnlocked) {
-      unlockDemoAccess();
-    }
-
     if (hasSecretLink) {
+      unlockDemoAccess();
       params.delete(PREVIEW_ACCESS_PARAM);
       const remaining = params.toString();
       const cleanedUrl = window.location.pathname + (remaining ? `?${remaining}` : '') + window.location.hash;
