@@ -307,7 +307,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
 
     setIsLoading(true);
     try {
-      await signInResident(email.trim(), password);
+      const result = await signInResident(email.trim(), password);
+      // This one login form is shared by anyone who types credentials in —
+      // if those credentials actually belong to a Hospital/MSO admin account,
+      // send them to that portal instead of loading a resident dashboard for
+      // them (their account_type is stamped on sign-up and travels with the
+      // session from then on).
+      if (result?.user?.user_metadata?.account_type === 'hospital_admin') {
+        onShowHospitalPortal?.();
+        return;
+      }
       // App.tsx listens for the auth session change and loads the resident's
       // real profile from the database, so we just flip into the app here.
       onLogin('resident');

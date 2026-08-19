@@ -626,6 +626,15 @@ export default function App() {
           try {
             const currentSession = await getCurrentSession();
             if (currentSession?.user) {
+              // Defensive check: this same "resident" login form is shared by
+              // anyone who types in valid credentials, so make sure we're not
+              // about to build a resident dashboard for a Hospital/MSO admin
+              // account that slipped through (e.g. a race with the auth
+              // listener below). Route them to the real portal instead.
+              if (isHospitalAdminSession(currentSession)) {
+                setShowHospitalPortal(true);
+                return;
+              }
               await loadResidentSession(currentSession.user.id);
               return;
             }
