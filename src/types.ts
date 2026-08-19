@@ -75,6 +75,17 @@ export interface HospitalFacility {
   contactPerson: string;
   contactEmail: string;
   logoUrl?: string;
+  ownerId?: string;
+}
+
+// A real hospital/MSO administrator account (Phase 2) — separate from the
+// resident's ResidentProfile and from the mock/demo Hospital Admin login.
+export interface HospitalAccountProfile {
+  id: string;
+  organizationName: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
 }
 
 export interface MoonlightingShift {

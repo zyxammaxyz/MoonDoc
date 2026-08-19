@@ -40,6 +40,7 @@ import {
 
 interface LandingPageProps {
   onLogin: (role?: 'resident' | 'admin', customProfile?: ResidentProfile) => void;
+  onShowHospitalPortal?: () => void;
 }
 
 interface CartoonHospital {
@@ -112,7 +113,7 @@ const DEMO_HOSPITALS: CartoonHospital[] = [
   }
 ];
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospitalPortal }) => {
   const [visibleCount, setVisibleCount] = useState<number>(0);
   const [activeHospital, setActiveHospital] = useState<CartoonHospital | null>(null);
   
@@ -1190,6 +1191,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
           )}
 
         </div>
+
+        {onShowHospitalPortal && (
+          <p className="max-w-xl mx-auto text-center text-xs text-slate-500 mt-5">
+            Represent a hospital or health system?{' '}
+            <button
+              onClick={onShowHospitalPortal}
+              className="font-bold text-blue-400 hover:text-blue-300 underline cursor-pointer"
+            >
+              Create an MSO account →
+            </button>
+          </p>
+        )}
 
       </main>
 

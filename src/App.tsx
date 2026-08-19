@@ -14,6 +14,7 @@ import { HoursDashboard } from './components/HoursDashboard';
 import { HospitalAdminPortal } from './components/HospitalAdminPortal';
 import { AffiliatedSites } from './components/AffiliatedSites';
 import { ResidentCommunications } from './components/ResidentCommunications';
+import { HospitalPortal } from './components/HospitalPortal';
 
 import { ResidentProfile, MoonlightingShift, Application, CredentialDocument, HospitalFacility, AdminNotification, ResidentNotification } from './types';
 import { INITIAL_RESIDENT, MOCK_SHIFTS, INITIAL_APPLICATIONS, MOCK_HOSPITALS } from './data/mockData';
@@ -67,6 +68,10 @@ export default function App() {
   // a local demo login for this phase, so it never touches this state.
   const [session, setSession] = useState<Session | null>(null);
   const [isBootstrapping, setIsBootstrapping] = useState<boolean>(true);
+
+  // Real Hospital/MSO account portal (Phase 2) — entirely separate from the
+  // resident session above and from the mock Hospital Admin demo login.
+  const [showHospitalPortal, setShowHospitalPortal] = useState<boolean>(false);
 
   // True only when the logged-in resident is a real Supabase-backed account
   // (as opposed to the still-mock Hospital Admin side). All the
@@ -561,9 +566,14 @@ export default function App() {
     );
   }
 
+  if (showHospitalPortal) {
+    return <HospitalPortal onBack={() => setShowHospitalPortal(false)} />;
+  }
+
   if (!isLoggedIn) {
     return (
       <LandingPage
+        onShowHospitalPortal={() => setShowHospitalPortal(true)}
         onLogin={async (role, customProfile) => {
           if (role === 'admin') {
             setIsLoggedIn(true);
