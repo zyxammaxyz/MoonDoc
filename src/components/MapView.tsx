@@ -49,6 +49,9 @@ export const MapView: React.FC<MapViewProps> = ({ shifts, onSelectShift, userDoc
 
   // Location Selector Dropdown toggle
   const [showLocationPicker, setShowLocationPicker] = useState<boolean>(false);
+  // Real browser geolocation state
+  const [isLocating, setIsLocating] = useState<boolean>(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
   // Filter Panel Toggle (Collapsible)
   const [showFiltersPanel, setShowFiltersPanel] = useState<boolean>(true);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
@@ -116,7 +119,7 @@ export const MapView: React.FC<MapViewProps> = ({ shifts, onSelectShift, userDoc
     }
   };
 
-  // Handle "Use My Current Location" (Hawthorne, CA)
+  // Handle setting the default SoCal hub location (Hawthorne, CA) — used by the map's quick region switcher
   const handleSetHawthorneLocation = () => {
     const hawthorne = PRESET_LOCATIONS[0];
     setUserLocation({ lat: hawthorne.lat, lng: hawthorne.lng });
@@ -125,6 +128,57 @@ export const MapView: React.FC<MapViewProps> = ({ shifts, onSelectShift, userDoc
     if (mapInstanceRef.current) {
       mapInstanceRef.current.flyTo([hawthorne.lat, hawthorne.lng], 11, { duration: 1.2 });
     }
+  };
+
+  // Handle "Use My Current Location" — real browser geolocation, reverse-geocoded to a readable address
+  const handleUseMyActualLocation = () => {
+    setLocationError(null);
+
+    if (!('geolocation' in navigator)) {
+      setLocationError('Your browser does not support location detection. Pick a preset location instead.');
+      return;
+    }
+
+    setIsLocating(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        setUserLocation({ lat: latitude, lng: longitude });
+        setShowLocationPicker(false);
+
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.flyTo([latitude, longitude], 12, { duration: 1.2 });
+        }
+
+        // Best-effort reverse geocode to a readable address (falls back to coordinates if unavailable)
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=14`,
+            { headers: { Accept: 'application/json' } }
+          );
+          if (res.ok) {
+            const data = await res.json();
+            setCurrentAddress(data?.display_name || `Your Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`);
+          } else {
+            setCurrentAddress(`Your Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`);
+          }
+        } catch {
+          setCurrentAddress(`Your Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`);
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      (error) => {
+        setIsLocating(false);
+        if (error.code === error.PERMISSION_DENIED) {
+          setLocationError('Location access was denied. Enable location permissions for this site in your browser settings, or pick a preset location below.');
+        } else {
+          setLocationError('Could not detect your location. Pick a preset location below instead.');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
   };
 
   // Initialize Leaflet Map
@@ -298,15 +352,22 @@ export const MapView: React.FC<MapViewProps> = ({ shifts, onSelectShift, userDoc
             {showLocationPicker && (
               <div className="mt-3 pt-3 border-t border-blue-200 space-y-2 animate-fade-in">
                 <button
-                  onClick={handleSetHawthorneLocation}
-                  className="w-full text-left px-3 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold flex items-center justify-between shadow-xs cursor-pointer"
+                  onClick={handleUseMyActualLocation}
+                  disabled={isLocating}
+                  className="w-full text-left px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-70 text-white rounded-xl text-xs font-bold flex items-center justify-between shadow-xs cursor-pointer transition-colors"
                 >
                   <span className="flex items-center space-x-1.5">
-                    <Target className="w-4 h-4" />
-                    <span>📍 Use Current Location (Hawthorne, CA)</span>
+                    <Target className={`w-4 h-4 ${isLocating ? 'animate-spin' : ''}`} />
+                    <span>{isLocating ? 'Detecting your location…' : '📍 Use My Current Location'}</span>
                   </span>
-                  <span className="text-[10px] bg-blue-700 px-2 py-0.5 rounded-md">Default Hub</span>
+                  <span className="text-[10px] bg-blue-700 px-2 py-0.5 rounded-md">GPS</span>
                 </button>
+
+                {locationError && (
+                  <p className="text-[11px] text-red-600 bg-red-50 border border-red-200 rounded-lg px-2.5 py-1.5 leading-snug">
+                    {locationError}
+                  </p>
+                )}
 
                 <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 px-1 pt-1">
                   Preset SoCal Medical Hubs:

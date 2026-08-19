@@ -34,12 +34,12 @@ export const Header: React.FC<HeaderProps> = ({
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
+    <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm overflow-x-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
-          
+        <div className="flex items-center justify-between gap-3 h-16 sm:h-20">
+
           {/* Logo & Brand */}
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('map')}>
+          <div className="flex items-center space-x-3 cursor-pointer min-w-0 shrink-0" onClick={() => setActiveTab('map')}>
             <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-sm">
               <Stethoscope className="w-6 h-6" />
             </div>
@@ -56,7 +56,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Navigation Links */}
-          <nav className="hidden xl:flex items-center space-x-1 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200 overflow-x-auto min-w-0">
+          <nav className="hidden xl:flex flex-1 justify-center items-center space-x-1 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200 overflow-x-auto min-w-0">
             <button
               onClick={() => setActiveTab('map')}
               className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
@@ -174,8 +174,8 @@ export const Header: React.FC<HeaderProps> = ({
           </nav>
 
           {/* User Profile Summary, Notification Bell & Admin Toggle */}
-          <div className="flex items-center space-x-2">
-            
+          <div className="flex items-center space-x-2 min-w-0 shrink-0">
+
             {onSwitchToAdmin && (
               <button
                 onClick={onSwitchToAdmin}
