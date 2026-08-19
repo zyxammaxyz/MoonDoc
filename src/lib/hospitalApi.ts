@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient';
-import { HospitalAccountProfile, HospitalFacility, MedicalSpecialty } from '../types';
+import { profileRowToResidentProfile } from './residentApi';
+import { HospitalAccountProfile, HospitalFacility, MedicalSpecialty, MoonlightingShift, PGYLevel, ResidentProfile } from '../types';
 
 // ============================================================================
 // Row <-> type mapping
@@ -187,4 +188,92 @@ export async function fetchMyHospitalSites(ownerId: string): Promise<HospitalFac
     .order('created_at', { ascending: false });
   if (error) throw error;
   return (data || []).map((row) => row.data as HospitalFacility);
+}
+
+// ============================================================================
+// Real job postings -- a real hospital posting a real shift, visible on the
+// resident Opportunity Map exactly like the seeded mock ones.
+// ============================================================================
+
+export interface NewShiftDetails {
+  title: string;
+  department: string;
+  specialty: MedicalSpecialty;
+  date: string; // YYYY-MM-DD
+  startTime: string; // HH:MM
+  endTime: string; // HH:MM
+  durationHours: number;
+  hourlyRate: number;
+  spotsAvailable: number;
+  pgyRequirement: PGYLevel[];
+  description: string;
+}
+
+export async function createShift(
+  details: NewShiftDetails,
+  site: HospitalFacility,
+  ownerId: string
+): Promise<MoonlightingShift> {
+  const id = `shift_real_${ownerId.slice(0, 8)}_${Date.now()}`;
+  const shift: MoonlightingShift = {
+    id,
+    hospitalId: site.id,
+    hospitalName: site.name,
+    facilityLocation: `${site.address}, ${site.city}, ${site.state}`,
+    lat: site.lat,
+    lng: site.lng,
+    distanceMiles: 0, // recomputed client-side from the resident's own location
+    specialty: details.specialty,
+    title: details.title,
+    department: details.department,
+    hourlyRate: details.hourlyRate,
+    totalPay: Math.round(details.hourlyRate * details.durationHours),
+    shiftType: 'Day Shift',
+    startTime: details.startTime,
+    endTime: details.endTime,
+    date: details.date,
+    durationHours: details.durationHours,
+    pgyRequirement: details.pgyRequirement.length ? details.pgyRequirement : ['PGY-1', 'PGY-2', 'PGY-3', 'PGY-4', 'PGY-5', 'Fellow'],
+    requiredDocIds: ['pd_letter', 'state_license', 'npi_verification', 'dea_certificate'],
+    description: details.description,
+    malpracticeIncluded: true,
+    restCallRoomAvailable: false,
+    mealStipend: false,
+    urgency: 'Standard',
+    spotsAvailable: details.spotsAvailable,
+  };
+
+  const { error } = await supabase.from('shifts').insert({ id, data: shift, owner_id: ownerId });
+  if (error) throw error;
+  return shift;
+}
+
+export async function fetchMyShifts(ownerId: string): Promise<MoonlightingShift[]> {
+  const { data, error } = await supabase
+    .from('shifts')
+    .select('data')
+    .eq('owner_id', ownerId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data || []).map((row) => row.data as MoonlightingShift);
+}
+
+export async function deleteShift(shiftId: string, ownerId: string): Promise<void> {
+  const { error } = await supabase.from('shifts').delete().eq('id', shiftId).eq('owner_id', ownerId);
+  if (error) throw error;
+}
+
+// ============================================================================
+// Passport sharing -- once a resident has expressed interest, the hospital
+// admin can read their full profile, including uploaded credential
+// documents (each carries its own already-signed file URL).
+// ============================================================================
+
+export async function fetchCandidateProfile(residentId: string): Promise<ResidentProfile | null> {
+  // Reuses the exact same row shape resident's own profile fetch uses --
+  // only the RLS policy differs (profiles_select_for_connected_hospital).
+  const { data, error } = await supabase.from('profiles').select('*').eq('id', residentId).maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return profileRowToResidentProfile(data as any);
 }
