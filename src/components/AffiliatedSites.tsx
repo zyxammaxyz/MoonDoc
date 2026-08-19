@@ -280,10 +280,14 @@ export const AffiliatedSites: React.FC<AffiliatedSitesProps> = ({
         })}
       </div>
 
-      {/* Chat Modal if resident clicks Chat */}
+      {/* Chat Modal if resident clicks Chat -- always re-derive the freshest
+          Application from the live `applications` prop (by id) rather than
+          the stale snapshot captured when the modal was opened, otherwise
+          newly sent/received messages never show up until the modal is
+          closed and reopened. */}
       {activeChatApp && (
         <ApplicationChatModal
-          application={activeChatApp}
+          application={applications.find((a) => a.id === activeChatApp.id) || activeChatApp}
           onSendMessage={onSendMessage}
           onClose={() => setActiveChatApp(null)}
           initialRole="resident"

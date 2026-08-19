@@ -560,9 +560,11 @@ export default function App() {
     }
   };
 
-  // Poll for hospital replies while the resident has the Chat tab open.
+  // Poll for hospital replies while the resident has a chat-capable tab open
+  // (Communications inbox, or the Affiliated Sites tab where the "Chat"
+  // button on a site card also opens a real thread).
   useEffect(() => {
-    if (activeTab !== 'communications') return;
+    if (activeTab !== 'communications' && activeTab !== 'affiliated_sites') return;
     let cancelled = false;
     const tick = async () => {
       const refreshed = await refreshMessagesForApps(applicationsRef.current);
