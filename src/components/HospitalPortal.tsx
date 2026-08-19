@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Building2,
   ArrowLeft,
@@ -18,6 +18,11 @@ import {
   ExternalLink,
   Trash2,
   ShieldCheck,
+  ChevronDown,
+  ChevronUp,
+  Settings2,
+  CheckCheck,
+  Undo2,
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { resendSignUpCode, signOutResident, getCurrentSession } from '../lib/residentApi';
@@ -31,6 +36,7 @@ import {
   createShift,
   fetchMyShifts,
   deleteShift,
+  updateShiftRequiredDocs,
   fetchCandidateProfile,
   NewSiteDetails,
   NewShiftDetails,
@@ -40,9 +46,31 @@ import {
   fetchMessages,
   sendMessage,
   markThreadSeen,
+  markThreadVerified,
+  fetchCustomDocRequests,
+  addCustomDocRequest,
+  deleteCustomDocRequest,
+  fetchCustomDocSubmissions,
   SiteInterestThread,
+  CustomDocRequest,
+  CustomDocSubmission,
 } from '../lib/interestApi';
-import { HospitalAccountProfile, HospitalFacility, ChatMessage, MoonlightingShift, ResidentProfile, PGYLevel } from '../types';
+import { HospitalAccountProfile, HospitalFacility, ChatMessage, MoonlightingShift, ResidentProfile, PGYLevel, DocumentCategory } from '../types';
+import { INITIAL_DOCUMENTS } from '../data/mockData';
+
+// The standard passport document catalog every resident already uploads to
+// -- reused here so a hospital can toggle which of these apply to a given
+// job, without duplicating or changing that baseline list in any way.
+const STANDARD_DOC_CATALOG = INITIAL_DOCUMENTS.map((d) => ({ id: d.id, name: d.name, category: d.category }));
+
+const DOC_CATEGORY_LABELS: Record<DocumentCategory, string> = {
+  institutional: 'PD & Institutional',
+  licensing: 'Licenses & DEA',
+  clinical_certs: 'ACLS & Clinical Certs',
+  malpractice_health: 'Malpractice & Health',
+  academic: 'CV & Transcripts',
+  other: 'Other',
+};
 
 interface HospitalPortalProps {
   onBack: () => void;
@@ -95,6 +123,22 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
   const [isSendingChat, setIsSendingChat] = useState(false);
   const [candidateProfile, setCandidateProfile] = useState<ResidentProfile | null>(null);
   const [isLoadingCandidateProfile, setIsLoadingCandidateProfile] = useState(false);
+  // Interested (not yet signed off) vs. Verified (hospital manually
+  // confirmed every requirement is met) -- this is a human call, never
+  // flipped automatically just because documents were uploaded.
+  const [candidateSubTab, setCandidateSubTab] = useState<'interested' | 'verified'>('interested');
+  const [isTogglingVerified, setIsTogglingVerified] = useState(false);
+  // The opened candidate's job-specific requirements checklist (only
+  // populated when their thread is tied to a specific posted job).
+  const [threadCustomDocRequests, setThreadCustomDocRequests] = useState<CustomDocRequest[]>([]);
+  const [threadCustomDocSubmissions, setThreadCustomDocSubmissions] = useState<CustomDocSubmission[]>([]);
+  const [isLoadingThreadRequirements, setIsLoadingThreadRequirements] = useState(false);
+
+  // Per-job document requirements management (Jobs tab)
+  const [expandedShiftId, setExpandedShiftId] = useState<string | null>(null);
+  const [customDocsByShift, setCustomDocsByShift] = useState<Record<string, CustomDocRequest[]>>({});
+  const [newCustomDocLabelByShift, setNewCustomDocLabelByShift] = useState<Record<string, string>>({});
+  const [isSavingRequirements, setIsSavingRequirements] = useState<string | null>(null);
 
   // Job postings
   const [shifts, setShifts] = useState<MoonlightingShift[]>([]);
@@ -230,16 +274,44 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
     }
   };
 
+  // Guards against a slow response for a previously-opened thread landing
+  // after the admin has already switched to a different candidate.
+  const openThreadRequestRef = useRef<string | null>(null);
+
   const handleOpenThread = async (thread: SiteInterestThread) => {
+    openThreadRequestRef.current = thread.id;
     setSelectedThread(thread);
     setIsLoadingThread(true);
     setThreadMessages([]);
     setCandidateProfile(null);
     setIsLoadingCandidateProfile(true);
+    setThreadCustomDocRequests([]);
+    setThreadCustomDocSubmissions([]);
     fetchCandidateProfile(thread.residentId)
-      .then(setCandidateProfile)
+      .then((prof) => {
+        if (openThreadRequestRef.current === thread.id) setCandidateProfile(prof);
+      })
       .catch((err) => console.error('Failed to load candidate passport', err))
-      .finally(() => setIsLoadingCandidateProfile(false));
+      .finally(() => {
+        if (openThreadRequestRef.current === thread.id) setIsLoadingCandidateProfile(false);
+      });
+
+    if (thread.shiftId) {
+      setIsLoadingThreadRequirements(true);
+      fetchCustomDocRequests(thread.shiftId)
+        .then(async (requests) => {
+          if (openThreadRequestRef.current !== thread.id) return;
+          setThreadCustomDocRequests(requests);
+          if (requests.length === 0) return;
+          const submissions = await fetchCustomDocSubmissions(requests.map((r) => r.id), thread.residentId);
+          if (openThreadRequestRef.current === thread.id) setThreadCustomDocSubmissions(submissions);
+        })
+        .catch((err) => console.error('Failed to load job document requirements', err))
+        .finally(() => {
+          if (openThreadRequestRef.current === thread.id) setIsLoadingThreadRequirements(false);
+        });
+    }
+
     try {
       const msgs = await fetchMessages(thread.id);
       setThreadMessages(msgs);
@@ -251,6 +323,78 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
       console.error('Failed to load candidate thread', err);
     } finally {
       setIsLoadingThread(false);
+    }
+  };
+
+  const handleToggleVerified = async (thread: SiteInterestThread) => {
+    setIsTogglingVerified(true);
+    const nextVerified = !thread.verified;
+    try {
+      await markThreadVerified(thread.id, nextVerified);
+      setInterests((prev) => prev.map((t) => (t.id === thread.id ? { ...t, verified: nextVerified } : t)));
+      setSelectedThread((prev) => (prev && prev.id === thread.id ? { ...prev, verified: nextVerified } : prev));
+    } catch (err) {
+      console.error('Failed to update verification status', err);
+    } finally {
+      setIsTogglingVerified(false);
+    }
+  };
+
+  // Toggle a standard passport document on/off for a job's requirements.
+  const handleToggleStandardDoc = async (shift: MoonlightingShift, docId: string) => {
+    if (!userId) return;
+    const nextRequired = shift.requiredDocIds.includes(docId)
+      ? shift.requiredDocIds.filter((id) => id !== docId)
+      : [...shift.requiredDocIds, docId];
+
+    setIsSavingRequirements(shift.id);
+    try {
+      const updated = await updateShiftRequiredDocs(shift, userId, nextRequired);
+      setShifts((prev) => prev.map((s) => (s.id === shift.id ? updated : s)));
+    } catch (err) {
+      console.error('Failed to update document requirements', err);
+    } finally {
+      setIsSavingRequirements(null);
+    }
+  };
+
+  const handleExpandShift = (shift: MoonlightingShift) => {
+    const isExpanding = expandedShiftId !== shift.id;
+    setExpandedShiftId(isExpanding ? shift.id : null);
+    if (isExpanding && !customDocsByShift[shift.id]) {
+      fetchCustomDocRequests(shift.id)
+        .then((requests) => setCustomDocsByShift((prev) => ({ ...prev, [shift.id]: requests })))
+        .catch((err) => console.error('Failed to load custom document requests', err));
+    }
+  };
+
+  const handleAddCustomDoc = async (shift: MoonlightingShift) => {
+    if (!userId) return;
+    const label = (newCustomDocLabelByShift[shift.id] || '').trim();
+    if (!label) return;
+
+    setIsSavingRequirements(shift.id);
+    try {
+      const created = await addCustomDocRequest(shift.id, userId, label);
+      setCustomDocsByShift((prev) => ({ ...prev, [shift.id]: [...(prev[shift.id] || []), created] }));
+      setNewCustomDocLabelByShift((prev) => ({ ...prev, [shift.id]: '' }));
+    } catch (err) {
+      console.error('Failed to add custom document request', err);
+    } finally {
+      setIsSavingRequirements(null);
+    }
+  };
+
+  const handleDeleteCustomDoc = async (shift: MoonlightingShift, requestId: string) => {
+    if (!userId) return;
+    setCustomDocsByShift((prev) => ({
+      ...prev,
+      [shift.id]: (prev[shift.id] || []).filter((r) => r.id !== requestId),
+    }));
+    try {
+      await deleteCustomDocRequest(requestId, userId);
+    } catch (err) {
+      console.error('Failed to remove custom document request', err);
     }
   };
 
@@ -825,30 +969,162 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
               </div>
             ) : (
               <div className="space-y-3">
-                {shifts.map((shift) => (
-                  <div key={shift.id} className="bg-white border border-slate-200 rounded-2xl p-4 flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <h3 className="font-bold text-sm text-slate-900">{shift.title}</h3>
-                        <span className="flex items-center space-x-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">
-                          <CheckCircle2 className="w-3 h-3" />
-                          <span>Live on map</span>
-                        </span>
+                {shifts.map((shift) => {
+                  const isExpanded = expandedShiftId === shift.id;
+                  const customDocs = customDocsByShift[shift.id] || [];
+                  const isSaving = isSavingRequirements === shift.id;
+                  return (
+                    <div key={shift.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+                      <div className="p-4 flex items-start justify-between">
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <h3 className="font-bold text-sm text-slate-900">{shift.title}</h3>
+                            <span className="flex items-center space-x-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">
+                              <CheckCircle2 className="w-3 h-3" />
+                              <span>Live on map</span>
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500 mt-0.5">{shift.department} · {shift.hospitalName}</p>
+                          <p className="text-[11px] text-slate-400 mt-1">
+                            {shift.date} · {shift.startTime}–{shift.endTime} · ${shift.hourlyRate}/hr · {shift.spotsAvailable} spot{shift.spotsAvailable !== 1 ? 's' : ''}
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-1 shrink-0">
+                          <button
+                            onClick={() => handleExpandShift(shift)}
+                            className="flex items-center space-x-1 px-2.5 py-1.5 text-slate-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg cursor-pointer text-[11px] font-bold"
+                            title="Manage required documents"
+                          >
+                            <Settings2 className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Requirements</span>
+                            {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteJob(shift.id)}
+                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
+                            title="Remove job"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                      <p className="text-xs text-slate-500 mt-0.5">{shift.department} · {shift.hospitalName}</p>
-                      <p className="text-[11px] text-slate-400 mt-1">
-                        {shift.date} · {shift.startTime}–{shift.endTime} · ${shift.hourlyRate}/hr · {shift.spotsAvailable} spot{shift.spotsAvailable !== 1 ? 's' : ''}
-                      </p>
+
+                      {isExpanded && (
+                        <div className="border-t border-slate-100 bg-slate-50/70 p-4 space-y-4">
+                          <div>
+                            <p className="text-xs font-bold text-slate-700 mb-2 flex items-center space-x-1.5">
+                              <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+                              <span>Required from the standard MoonDoc Passport</span>
+                            </p>
+                            <p className="text-[11px] text-slate-500 mb-2.5">
+                              Toggle which of the documents residents already upload to their Passport are required for this specific job.
+                            </p>
+                            <div className="space-y-3">
+                              {(Object.keys(DOC_CATEGORY_LABELS) as DocumentCategory[]).map((cat) => {
+                                const docsInCat = STANDARD_DOC_CATALOG.filter((d) => d.category === cat);
+                                if (docsInCat.length === 0) return null;
+                                return (
+                                  <div key={cat}>
+                                    <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">
+                                      {DOC_CATEGORY_LABELS[cat]}
+                                    </p>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                      {docsInCat.map((doc) => {
+                                        const isOn = shift.requiredDocIds.includes(doc.id);
+                                        return (
+                                          <button
+                                            key={doc.id}
+                                            type="button"
+                                            disabled={isSaving}
+                                            onClick={() => handleToggleStandardDoc(shift, doc.id)}
+                                            className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg border text-[11px] font-semibold text-left transition-colors cursor-pointer disabled:opacity-60 ${
+                                              isOn
+                                                ? 'bg-blue-50 border-blue-200 text-blue-900'
+                                                : 'bg-white border-slate-200 text-slate-500'
+                                            }`}
+                                          >
+                                            <span className="truncate mr-2">{doc.name}</span>
+                                            <span
+                                              className={`w-8 h-[18px] rounded-full relative shrink-0 transition-colors ${
+                                                isOn ? 'bg-blue-600' : 'bg-slate-300'
+                                              }`}
+                                            >
+                                              <span
+                                                className={`w-3.5 h-3.5 bg-white rounded-full absolute top-0.5 transition-transform ${
+                                                  isOn ? 'right-0.5' : 'left-0.5'
+                                                }`}
+                                              />
+                                            </span>
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          <div className="pt-3 border-t border-slate-200">
+                            <p className="text-xs font-bold text-slate-700 mb-2 flex items-center space-x-1.5">
+                              <FileText className="w-3.5 h-3.5 text-blue-600" />
+                              <span>Additional documents specific to this job</span>
+                            </p>
+
+                            {customDocs.length > 0 && (
+                              <div className="space-y-1.5 mb-2.5">
+                                {customDocs.map((doc) => (
+                                  <div
+                                    key={doc.id}
+                                    className="flex items-center justify-between px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold text-slate-800"
+                                  >
+                                    <span className="truncate">{doc.label}</span>
+                                    <button
+                                      onClick={() => handleDeleteCustomDoc(shift, doc.id)}
+                                      className="text-slate-400 hover:text-red-600 cursor-pointer shrink-0 ml-2"
+                                      title="Remove this requirement"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            <form
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                handleAddCustomDoc(shift);
+                              }}
+                              className="flex items-center space-x-2"
+                            >
+                              <input
+                                type="text"
+                                value={newCustomDocLabelByShift[shift.id] || ''}
+                                onChange={(e) =>
+                                  setNewCustomDocLabelByShift((prev) => ({ ...prev, [shift.id]: e.target.value }))
+                                }
+                                placeholder="e.g. Site-specific EMR training certificate"
+                                className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-blue-600"
+                              />
+                              <button
+                                type="submit"
+                                disabled={isSaving || !(newCustomDocLabelByShift[shift.id] || '').trim()}
+                                className="flex items-center space-x-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-xs font-bold rounded-xl cursor-pointer shrink-0"
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                                <span>Add</span>
+                              </button>
+                            </form>
+                            <p className="text-[10px] text-slate-400 mt-1.5">
+                              Adding a document requests it immediately from every resident already connected to this job, not just future candidates.
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <button
-                      onClick={() => handleDeleteJob(shift.id)}
-                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg cursor-pointer shrink-0"
-                      title="Remove job"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </>
@@ -866,11 +1142,108 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
                   <div>
                     <h3 className="text-sm font-bold">{selectedThread.residentName}</h3>
                     <p className="text-[11px] text-slate-300">
-                      {selectedThread.residentProgram || 'Resident'} · Interested in {selectedThread.hospitalName}
+                      {selectedThread.residentProgram || 'Resident'} ·{' '}
+                      {selectedThread.shiftTitle
+                        ? `Applied for "${selectedThread.shiftTitle}" at ${selectedThread.hospitalName}`
+                        : `Interested in ${selectedThread.hospitalName}`}
                     </p>
                   </div>
                 </div>
+
+                <button
+                  onClick={() => handleToggleVerified(selectedThread)}
+                  disabled={isTogglingVerified}
+                  className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-bold cursor-pointer disabled:opacity-50 shrink-0 ${
+                    selectedThread.verified
+                      ? 'bg-slate-700 hover:bg-slate-600 text-white'
+                      : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                  }`}
+                >
+                  {isTogglingVerified ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : selectedThread.verified ? (
+                    <Undo2 className="w-3.5 h-3.5" />
+                  ) : (
+                    <CheckCheck className="w-3.5 h-3.5" />
+                  )}
+                  <span>{selectedThread.verified ? 'Verified — Move Back' : 'Mark as Verified'}</span>
+                </button>
               </div>
+
+              {selectedThread.shiftId && (
+                <div className="p-3.5 bg-slate-50 border-b border-slate-200">
+                  <div className="flex items-center space-x-1.5 mb-2">
+                    <Settings2 className="w-3.5 h-3.5 text-blue-600" />
+                    <span className="text-xs font-bold text-slate-800">Requirements for this job</span>
+                  </div>
+                  {isLoadingThreadRequirements ? (
+                    <div className="flex items-center space-x-2 text-xs text-slate-400">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Checking documents…</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {(() => {
+                        const jobShift = shifts.find((s) => s.id === selectedThread.shiftId);
+                        const standardChecklist = (jobShift?.requiredDocIds || []).map((docId) => {
+                          const doc = candidateProfile?.documents.find((d) => d.id === docId);
+                          return { docId, name: doc?.name || docId, met: doc?.status === 'verified' };
+                        });
+                        return (
+                          <>
+                            {standardChecklist.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5">
+                                {standardChecklist.map((item) => (
+                                  <span
+                                    key={item.docId}
+                                    className={`px-2 py-1 rounded-lg border text-[10px] font-bold ${
+                                      item.met
+                                        ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                                        : 'bg-amber-50 border-amber-200 text-amber-800'
+                                    }`}
+                                  >
+                                    {item.met ? '✓' : '✗'} {item.name}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            {threadCustomDocRequests.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5">
+                                {threadCustomDocRequests.map((req) => {
+                                  const submitted = threadCustomDocSubmissions.find(
+                                    (s) => s.requestId === req.id && s.fileUrl
+                                  );
+                                  return submitted ? (
+                                    <a
+                                      key={req.id}
+                                      href={submitted.fileUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="px-2 py-1 rounded-lg border text-[10px] font-bold bg-emerald-50 border-emerald-200 text-emerald-800 underline hover:no-underline"
+                                    >
+                                      ✓ {req.label}
+                                    </a>
+                                  ) : (
+                                    <span
+                                      key={req.id}
+                                      className="px-2 py-1 rounded-lg border text-[10px] font-bold bg-amber-50 border-amber-200 text-amber-800"
+                                    >
+                                      ✗ {req.label}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            )}
+                            {standardChecklist.length === 0 && threadCustomDocRequests.length === 0 && (
+                              <p className="text-[11px] text-slate-400">No specific document requirements set for this job yet.</p>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="p-3.5 bg-white border-b border-slate-200">
                 <div className="flex items-center space-x-1.5 mb-2">
@@ -971,45 +1344,80 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
                 </button>
               </form>
             </div>
-          ) : interests.length === 0 ? (
-            <div className="text-center py-16 bg-white border border-slate-200 rounded-2xl">
-              <Users className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-              <p className="text-slate-700 font-bold text-sm">No interested residents yet</p>
-              <p className="text-xs text-slate-500 mt-1">
-                When a resident expresses interest in one of your sites, they'll show up here.
-              </p>
-            </div>
           ) : (
-            <div className="space-y-3">
-              {interests.map((thread) => (
-                <div
-                  key={thread.id}
-                  onClick={() => handleOpenThread(thread)}
-                  className="bg-white border border-slate-200 rounded-2xl p-4 flex items-start justify-between cursor-pointer hover:border-blue-300 transition-colors"
+            <>
+              <div className="flex mb-4 bg-slate-100 rounded-xl p-1 max-w-xs">
+                <button
+                  onClick={() => setCandidateSubTab('interested')}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                    candidateSubTab === 'interested' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'
+                  }`}
                 >
-                  <div className="flex items-start space-x-3">
-                    <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                      <MessageSquare className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <h3 className="font-bold text-sm text-slate-900">{thread.residentName}</h3>
-                        {thread.status === 'new' && (
-                          <span className="flex items-center space-x-1 text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-md">
-                            <Sparkles className="w-3 h-3" />
-                            <span>New</span>
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-slate-500 mt-0.5">{thread.residentProgram || 'Resident'}</p>
-                      <p className="text-[11px] text-blue-700 font-semibold mt-1">
-                        Interested in {thread.hospitalName}
-                      </p>
-                    </div>
-                  </div>
+                  Interested ({interests.filter((t) => !t.verified).length})
+                </button>
+                <button
+                  onClick={() => setCandidateSubTab('verified')}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                    candidateSubTab === 'verified' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'
+                  }`}
+                >
+                  Verified ({interests.filter((t) => t.verified).length})
+                </button>
+              </div>
+
+              {interests.filter((t) => (candidateSubTab === 'verified' ? t.verified : !t.verified)).length === 0 ? (
+                <div className="text-center py-16 bg-white border border-slate-200 rounded-2xl">
+                  <Users className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                  <p className="text-slate-700 font-bold text-sm">
+                    {candidateSubTab === 'verified' ? 'No verified candidates yet' : 'No interested residents yet'}
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {candidateSubTab === 'verified'
+                      ? 'Mark a candidate as Verified from their chat once they\'ve met every requirement.'
+                      : "When a resident expresses interest in one of your sites, they'll show up here."}
+                  </p>
                 </div>
-              ))}
-            </div>
+              ) : (
+                <div className="space-y-3">
+                  {interests
+                    .filter((t) => (candidateSubTab === 'verified' ? t.verified : !t.verified))
+                    .map((thread) => (
+                      <div
+                        key={thread.id}
+                        onClick={() => handleOpenThread(thread)}
+                        className="bg-white border border-slate-200 rounded-2xl p-4 flex items-start justify-between cursor-pointer hover:border-blue-300 transition-colors"
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                            <MessageSquare className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <div className="flex items-center space-x-2">
+                              <h3 className="font-bold text-sm text-slate-900">{thread.residentName}</h3>
+                              {thread.status === 'new' && (
+                                <span className="flex items-center space-x-1 text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-md">
+                                  <Sparkles className="w-3 h-3" />
+                                  <span>New</span>
+                                </span>
+                              )}
+                              {thread.verified && (
+                                <span className="flex items-center space-x-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">
+                                  <CheckCheck className="w-3 h-3" />
+                                  <span>Verified</span>
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-slate-500 mt-0.5">{thread.residentProgram || 'Resident'}</p>
+                            <p className="text-[11px] text-blue-700 font-semibold mt-1">
+                              {thread.shiftTitle ? `Applied for "${thread.shiftTitle}"` : `Interested in ${thread.hospitalName}`}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </>
           )
         ) : (
           <>

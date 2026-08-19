@@ -13,7 +13,8 @@ import {
   ArrowRight,
   UserCheck,
   Send,
-  Check
+  Check,
+  Briefcase
 } from 'lucide-react';
 import { ApplicationChatModal } from './ApplicationChatModal';
 
@@ -29,6 +30,11 @@ interface AffiliatedSitesProps {
     senderRole: 'resident' | 'hospital',
     senderName: string
   ) => void;
+  // When a site has specific jobs posted, each job gets its own "Apply"
+  // entry point (opens the shared Shift Detail Modal so the resident sees
+  // that exact job's document requirements) instead of one generic
+  // "Connect" button for the whole site.
+  onViewShift?: (shift: MoonlightingShift) => void;
 }
 
 export const AffiliatedSites: React.FC<AffiliatedSitesProps> = ({
@@ -38,6 +44,7 @@ export const AffiliatedSites: React.FC<AffiliatedSitesProps> = ({
   profile,
   onConnectSite,
   onSendMessage,
+  onViewShift,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSystemFilter, setSelectedSystemFilter] = useState('all');
@@ -218,6 +225,44 @@ export const AffiliatedSites: React.FC<AffiliatedSitesProps> = ({
                     <span>{siteShifts.length} active moonlighting shifts posted</span>
                   </p>
                 </div>
+
+                {/* Individual open positions -- each job gets its own Apply
+                    entry point (opens Shift Detail Modal with that exact
+                    job's document requirements) rather than one generic
+                    site-wide connect button. */}
+                {siteShifts.length > 0 && onViewShift && (
+                  <div className="space-y-1.5 mb-2">
+                    <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center space-x-1">
+                      <Briefcase className="w-3 h-3 text-blue-600" />
+                      <span>Open Positions</span>
+                    </p>
+                    {siteShifts.map((job) => {
+                      const appliedToJob = applications.some((a) => a.shiftId === job.id);
+                      return (
+                        <button
+                          key={job.id}
+                          onClick={() => onViewShift(job)}
+                          className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-xl text-left transition-colors cursor-pointer"
+                        >
+                          <span className="min-w-0">
+                            <span className="block text-xs font-bold text-slate-800 truncate">{job.title}</span>
+                            <span className="block text-[10px] text-slate-500">${job.hourlyRate}/hr · {job.date}</span>
+                          </span>
+                          {appliedToJob ? (
+                            <span className="shrink-0 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md ml-2">
+                              Applied
+                            </span>
+                          ) : (
+                            <span className="shrink-0 text-[10px] font-bold text-blue-700 flex items-center space-x-0.5 ml-2">
+                              <span>View &amp; Apply</span>
+                              <ArrowRight className="w-3 h-3" />
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Card Footer Actions */}

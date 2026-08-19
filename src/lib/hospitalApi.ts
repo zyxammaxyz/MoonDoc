@@ -263,6 +263,30 @@ export async function deleteShift(shiftId: string, ownerId: string): Promise<voi
   if (error) throw error;
 }
 
+/**
+ * A hospital toggling which of the STANDARD passport documents are required
+ * for one of their own posted jobs. This reuses shift.requiredDocIds
+ * directly (no separate table) -- the resident-facing checklist everywhere
+ * else in the app (ShiftDetailModal, ApplicationChatModal) already reads
+ * straight from that field, so this takes effect immediately with no other
+ * changes needed. Custom, non-catalog document asks are tracked separately
+ * (see custom_document_requests / interestApi.ts).
+ */
+export async function updateShiftRequiredDocs(
+  shift: MoonlightingShift,
+  ownerId: string,
+  requiredDocIds: string[]
+): Promise<MoonlightingShift> {
+  const updated: MoonlightingShift = { ...shift, requiredDocIds };
+  const { error } = await supabase
+    .from('shifts')
+    .update({ data: updated })
+    .eq('id', shift.id)
+    .eq('owner_id', ownerId);
+  if (error) throw error;
+  return updated;
+}
+
 // ============================================================================
 // Passport sharing -- once a resident has expressed interest, the hospital
 // admin can read their full profile, including uploaded credential

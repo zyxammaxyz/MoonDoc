@@ -466,8 +466,64 @@ export default function App() {
     setAdminNotifications((prev) => [newNotif, ...prev]);
   };
 
+  // Real hospital account version of applying to one specific posted job:
+  // creates a real, job-tied site_interests + first site_messages row
+  // (visible to the hospital admin as a notification/candidate, scoped to
+  // this exact job so their per-job document requirements apply), then
+  // mirrors it into the local `applications` list like a mock application.
+  const handleApplyRealShift = async (shift: MoonlightingShift, hospital: HospitalFacility) => {
+    if (!session?.user) return;
+    const residentName = `Dr. ${profile.firstName} ${profile.lastName}`;
+    const openingMessage = `Hello! I'm ${residentName} (${profile.residencyProgram}) and I'd like to apply for "${shift.title}" (${shift.date}, $${shift.hourlyRate}/hr). My verified MoonDoc Passport credentials are available on request.`;
+
+    try {
+      const { thread, message } = await createInterestThread(
+        hospital,
+        session.user.id,
+        residentName,
+        profile.residencyProgram,
+        openingMessage,
+        shift
+      );
+
+      const newApp: Application = {
+        id: `app_conn_${Date.now()}`,
+        shiftId: shift.id,
+        shift,
+        appliedDate: new Date().toISOString().split('T')[0],
+        status: 'Credentialing Review',
+        hospitalNotes: `Resident ${residentName} applied for "${shift.title}" at ${hospital.name}. Passport credentials attached for review.`,
+        passportShareToken: `MOONDOC-${profile.licenseState}-${Math.floor(10000 + Math.random() * 90000)}`,
+        applicantProfile: profile,
+        messages: [message],
+        realThreadId: thread.id,
+      };
+
+      setApplications((prev) => [newApp, ...prev]);
+      if (isRealResident) {
+        createApplication(newApp, session.user.id).catch((err) =>
+          console.error('Failed to save real job application', err)
+        );
+      }
+    } catch (err) {
+      console.error('Failed to apply to real job posting', err);
+    }
+  };
+
   // Handle shift application
   const handleApplyShift = (shift: MoonlightingShift) => {
+    // Real hospital job posting (has an owner) -> real notification + real
+    // chat thread tied to this specific job, instead of the fabricated MSO
+    // reply used for mock shifts.
+    const shiftHospital = hospitals.find((h) => h.id === shift.hospitalId);
+    if (shiftHospital?.ownerId) {
+      const alreadyApplied = applications.some((a) => a.shiftId === shift.id);
+      if (!alreadyApplied) {
+        handleApplyRealShift(shift, shiftHospital);
+      }
+      return;
+    }
+
     const newApp: Application = {
       id: `app_${Date.now()}`,
       shiftId: shift.id,
@@ -899,6 +955,7 @@ export default function App() {
             profile={profile}
             onConnectSite={handleConnectSite}
             onSendMessage={handleSendMessage}
+            onViewShift={(shift) => setSelectedShiftModal(shift)}
           />
         )}
 
