@@ -87,6 +87,15 @@ export default function App() {
     isLoggedInRef.current = isLoggedIn;
   }, [isLoggedIn]);
 
+  // A single Supabase Auth pool is shared by residents and hospital admins.
+  // We tag hospital sign-ups with account_type metadata at sign-up time (see
+  // beginHospitalSignUp) so that when a brand new session shows up — whether
+  // from a page load or from clicking an email confirmation link — we route
+  // it to the right experience instead of always assuming "resident."
+  const isHospitalAdminSession = (s: Session | null): boolean => {
+    return s?.user?.user_metadata?.account_type === 'hospital_admin';
+  };
+
   const loadResidentSession = async (userId: string) => {
     // fetchMyProfile returns null the very first time a resident lands back
     // after clicking their email confirmation link — ensureProfileFromAuthUser
@@ -137,7 +146,11 @@ export default function App() {
         const existingSession = await getCurrentSession();
         if (mounted) setSession(existingSession);
         if (mounted && existingSession?.user) {
-          await loadResidentSession(existingSession.user.id);
+          if (isHospitalAdminSession(existingSession)) {
+            setShowHospitalPortal(true);
+          } else {
+            await loadResidentSession(existingSession.user.id);
+          }
         }
       } catch (err) {
         console.error('Failed to restore session', err);
@@ -152,6 +165,11 @@ export default function App() {
 
       if (event === 'SIGNED_OUT') {
         if (isLoggedInRef.current) resetToLoggedOutState();
+        return;
+      }
+
+      if (newSession?.user && isHospitalAdminSession(newSession)) {
+        setShowHospitalPortal(true);
         return;
       }
 
