@@ -1,5 +1,5 @@
 -- ============================================================================
--- MoonDoc — Resident Accounts Schema
+-- MoonCall — Resident Accounts Schema
 -- Run this once in your Supabase project's SQL Editor (Dashboard → SQL Editor
 -- → New query → paste all of this → Run).
 --

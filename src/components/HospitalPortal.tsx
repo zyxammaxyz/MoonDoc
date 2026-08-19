@@ -559,7 +559,7 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
             className="flex items-center space-x-1.5 text-sm font-semibold text-slate-500 hover:text-slate-800 mb-4 cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Back to MoonDoc</span>
+            <span>Back to MoonCall</span>
           </button>
 
           <div className="bg-white border border-slate-200 rounded-3xl shadow-lg p-8">
@@ -701,7 +701,7 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
             onClick={onBack}
             className="px-3 py-2 text-xs font-bold text-slate-500 hover:text-slate-800 cursor-pointer"
           >
-            Back to MoonDoc
+            Back to MoonCall
           </button>
           <button
             onClick={handleLogout}
@@ -1014,7 +1014,7 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
                           <div>
                             <p className="text-xs font-bold text-slate-700 mb-2 flex items-center space-x-1.5">
                               <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-                              <span>Required from the standard MoonDoc Passport</span>
+                              <span>Required from the standard MoonCall Passport</span>
                             </p>
                             <p className="text-[11px] text-slate-500 mb-2.5">
                               Toggle which of the documents residents already upload to their Passport are required for this specific job.
@@ -1248,7 +1248,7 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
               <div className="p-3.5 bg-white border-b border-slate-200">
                 <div className="flex items-center space-x-1.5 mb-2">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                  <span className="text-xs font-bold text-slate-800">MoonDoc Passport</span>
+                  <span className="text-xs font-bold text-slate-800">MoonCall Passport</span>
                 </div>
                 {isLoadingCandidateProfile ? (
                   <div className="flex items-center space-x-2 text-xs text-slate-400">

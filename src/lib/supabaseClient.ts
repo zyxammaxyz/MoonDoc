@@ -8,7 +8,7 @@ export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 if (!isSupabaseConfigured) {
   // eslint-disable-next-line no-console
   console.warn(
-    '[MoonDoc] Supabase is not configured. Set VITE_SUPABASE_URL and ' +
+    '[MoonCall] Supabase is not configured. Set VITE_SUPABASE_URL and ' +
       'VITE_SUPABASE_ANON_KEY in your .env.local file (see .env.example). ' +
       'Resident sign-up/sign-in will not work until this is set.'
   );

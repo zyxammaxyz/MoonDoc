@@ -118,7 +118,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
                 className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center space-x-1.5 transition-colors border border-slate-200"
               >
                 <Share2 className="w-3.5 h-3.5 text-blue-600" />
-                <span>Export MoonDoc Passport</span>
+                <span>Export MoonCall Passport</span>
               </button>
 
               <button

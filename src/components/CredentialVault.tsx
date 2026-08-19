@@ -80,12 +80,12 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
   const [isPDRequestOpen, setIsPDRequestOpen] = useState(false);
   const [pdName, setPdName] = useState('Dr. Robert Vance, MD');
   const [pdEmail, setPdEmail] = useState('rvance@keck.usc.edu');
-  const [pdCustomNote, setPdCustomNote] = useState('Hi Dr. Vance, I am applying for moonlighting opportunities. Could you please upload an updated Good Standing & Moonlighting Approval Letter for my MoonDoc Passport using this secure upload link?');
+  const [pdCustomNote, setPdCustomNote] = useState('Hi Dr. Vance, I am applying for moonlighting opportunities. Could you please upload an updated Good Standing & Moonlighting Approval Letter for my MoonCall Passport using this secure upload link?');
   const [isSendingPDRequest, setIsSendingPDRequest] = useState(false);
   const [pdSentConfirmation, setPdSentConfirmation] = useState<{ pdName: string; pdEmail: string; dateSent: string } | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
 
-  const pdUploadToken = `https://moondoc.app/upload/pd-letter/token-${profile.id.replace('res_', '')}-2026`;
+  const pdUploadToken = `https://mooncall.app/upload/pd-letter/token-${profile.id.replace('res_', '')}-2026`;
 
   const handleCopyPDLink = () => {
     navigator.clipboard.writeText(pdUploadToken);
@@ -157,7 +157,7 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
         expirationDate: customExpirationDate || '2027-12-31',
         docNumber: customDocNumber || `CUST-${Math.floor(100000 + Math.random() * 900000)}`,
         issuer: 'Uploaded by Resident',
-        notes: 'Custom document attached to MoonDoc Passport',
+        notes: 'Custom document attached to MoonCall Passport',
       };
 
       const updatedDocs = [newDoc, ...profile.documents];
@@ -169,7 +169,7 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
       setCustomExpirationDate('2027-12-31');
       setCustomFileName('');
       setCustomFileObj(null);
-      setCustomSuccessMsg(`"${titleClean}" successfully saved to your MoonDoc Passport! You can add another document below.`);
+      setCustomSuccessMsg(`"${titleClean}" successfully saved to your MoonCall Passport! You can add another document below.`);
 
       setTimeout(() => {
         setCustomSuccessMsg(null);
@@ -410,7 +410,7 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
               className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition-all flex items-center space-x-2"
             >
               <Share2 className="w-4 h-4" />
-              <span>Share MoonDoc Passport</span>
+              <span>Share MoonCall Passport</span>
             </button>
           </div>
 
@@ -876,7 +876,7 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
                 </span>
               </div>
               <p className="text-xs text-slate-600 mt-1">
-                Employer or hospital MSO requested additional credentials not prepopulated in your vault? Upload any custom document here to save it to your MoonDoc Passport.
+                Employer or hospital MSO requested additional credentials not prepopulated in your vault? Upload any custom document here to save it to your MoonCall Passport.
               </p>
             </div>
           </div>
@@ -1202,7 +1202,7 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
                   <div className="space-y-1">
                     <p className="font-bold">Email request dispatched to {pdSentConfirmation.pdName}!</p>
                     <p className="text-[11px] text-emerald-800">
-                      An email was sent to <strong>{pdSentConfirmation.pdEmail}</strong> on {pdSentConfirmation.dateSent} with a single-use upload link. When they upload the signed letter, it will automatically populate your MoonDoc Passport.
+                      An email was sent to <strong>{pdSentConfirmation.pdEmail}</strong> on {pdSentConfirmation.dateSent} with a single-use upload link. When they upload the signed letter, it will automatically populate your MoonCall Passport.
                     </p>
                   </div>
                 </div>
@@ -1261,7 +1261,7 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
                       Live Email Request Preview
                     </span>
                     <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
-                      Automated MoonDoc Dispatch
+                      Automated MoonCall Dispatch
                     </span>
                   </div>
 
@@ -1276,7 +1276,7 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
                       </div>
                       <div className="flex items-center space-x-2">
                         <span className="text-slate-400 w-14 font-semibold">From:</span>
-                        <span className="text-slate-300 font-mono">MoonDoc Passport &lt;requests@moondoc.app&gt;</span>
+                        <span className="text-slate-300 font-mono">MoonCall Passport &lt;requests@mooncall.app&gt;</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <span className="text-slate-400 w-14 font-semibold">Subject:</span>
@@ -1291,7 +1291,7 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
                       </p>
 
                       <p className="text-slate-700 leading-relaxed">
-                        <strong>Dr. {profile.name}</strong> ({profile.residencyProgram}, PGY-{profile.pgyLevel}) has requested an official Program Director Moonlighting Approval & Good Standing Letter for their verified MoonDoc Passport.
+                        <strong>Dr. {profile.name}</strong> ({profile.residencyProgram}, PGY-{profile.pgyLevel}) has requested an official Program Director Moonlighting Approval & Good Standing Letter for their verified MoonCall Passport.
                       </p>
 
                       {pdCustomNote && (
@@ -1310,7 +1310,7 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
                           Upload Signed Approval Letter
                         </h4>
                         <p className="text-[11px] text-indigo-100 max-w-md mx-auto">
-                          Click the secure link below to upload the signed PDF. The letter will be instantly verified and attached to Dr. {profile.name}'s MoonDoc Passport profile.
+                          Click the secure link below to upload the signed PDF. The letter will be instantly verified and attached to Dr. {profile.name}'s MoonCall Passport profile.
                         </p>
                         <div className="pt-1">
                           <div className="inline-flex items-center space-x-2 px-3 py-1.5 bg-white text-indigo-900 rounded-lg font-mono text-[10px] font-bold shadow-inner max-w-full truncate">
@@ -1322,7 +1322,7 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
 
                       <p className="text-[11px] text-slate-500 pt-1">
                         Thank you for supporting Dr. {profile.name}'s professional development.<br />
-                        <strong>MoonDoc Credentialing Operations</strong>
+                        <strong>MoonCall Credentialing Operations</strong>
                       </p>
                     </div>
                   </div>

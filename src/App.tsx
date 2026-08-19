@@ -306,7 +306,7 @@ export default function App() {
   const handleConnectRealSite = async (hospital: HospitalFacility) => {
     if (!session?.user) return;
     const residentName = `Dr. ${profile.firstName} ${profile.lastName}`;
-    const openingMessage = `Hello! I'm ${residentName} (${profile.residencyProgram}) and I'm interested in future moonlighting opportunities at ${hospital.name}. My verified MoonDoc Passport credentials are available on request.`;
+    const openingMessage = `Hello! I'm ${residentName} (${profile.residencyProgram}) and I'm interested in future moonlighting opportunities at ${hospital.name}. My verified MoonCall Passport credentials are available on request.`;
 
     try {
       const { thread, message } = await createInterestThread(
@@ -337,7 +337,7 @@ export default function App() {
         durationHours: 12,
         pgyRequirement: [profile.pgyLevel],
         requiredDocIds: ['pd_letter', 'state_license', 'npi_verification', 'dea_certificate'],
-        description: `Resident ${residentName} expressed interest in moonlighting opportunities at ${hospital.name}. MoonDoc Passport attached.`,
+        description: `Resident ${residentName} expressed interest in moonlighting opportunities at ${hospital.name}. MoonCall Passport attached.`,
         malpracticeIncluded: true,
         restCallRoomAvailable: true,
         mealStipend: true,
@@ -352,7 +352,7 @@ export default function App() {
         appliedDate: new Date().toISOString().split('T')[0],
         status: 'Credentialing Review',
         hospitalNotes: `Resident ${residentName} connected with ${hospital.name} MSO. Passport credentials attached for review.`,
-        passportShareToken: `MOONDOC-${profile.licenseState}-${Math.floor(10000 + Math.random() * 90000)}`,
+        passportShareToken: `MOONCALL-${profile.licenseState}-${Math.floor(10000 + Math.random() * 90000)}`,
         applicantProfile: profile,
         messages: [message],
         realThreadId: thread.id,
@@ -407,7 +407,7 @@ export default function App() {
       durationHours: 12,
       pgyRequirement: [profile.pgyLevel],
       requiredDocIds: ['pd_letter', 'state_license', 'npi_verification', 'dea_certificate'],
-      description: `Resident Dr. ${profile.firstName} ${profile.lastName} expressed interest in moonlighting opportunities at ${hospital.name}. MoonDoc Passport attached.`,
+      description: `Resident Dr. ${profile.firstName} ${profile.lastName} expressed interest in moonlighting opportunities at ${hospital.name}. MoonCall Passport attached.`,
       malpracticeIncluded: true,
       restCallRoomAvailable: true,
       mealStipend: true,
@@ -422,14 +422,14 @@ export default function App() {
       appliedDate: new Date().toISOString().split('T')[0],
       status: 'Credentialing Review', // Added to Under Review candidate list!
       hospitalNotes: `Resident Dr. ${profile.firstName} ${profile.lastName} connected with ${hospital.name} MSO. Passport credentials attached for review.`,
-      passportShareToken: `MOONDOC-${profile.licenseState}-${Math.floor(10000 + Math.random() * 90000)}`,
+      passportShareToken: `MOONCALL-${profile.licenseState}-${Math.floor(10000 + Math.random() * 90000)}`,
       applicantProfile: profile,
       messages: [
         {
           id: `msg_c1_${Date.now()}`,
           senderRole: 'resident',
           senderName: `Dr. ${profile.firstName} ${profile.lastName}`,
-          text: `Hello ${hospital.contactPerson}! I am interested in future moonlighting opportunities at ${hospital.name}. My verified MoonDoc Passport credentials are attached.`,
+          text: `Hello ${hospital.contactPerson}! I am interested in future moonlighting opportunities at ${hospital.name}. My verified MoonCall Passport credentials are attached.`,
           timestamp: 'Just now'
         },
         {
@@ -474,7 +474,7 @@ export default function App() {
   const handleApplyRealShift = async (shift: MoonlightingShift, hospital: HospitalFacility) => {
     if (!session?.user) return;
     const residentName = `Dr. ${profile.firstName} ${profile.lastName}`;
-    const openingMessage = `Hello! I'm ${residentName} (${profile.residencyProgram}) and I'd like to apply for "${shift.title}" (${shift.date}, $${shift.hourlyRate}/hr). My verified MoonDoc Passport credentials are available on request.`;
+    const openingMessage = `Hello! I'm ${residentName} (${profile.residencyProgram}) and I'd like to apply for "${shift.title}" (${shift.date}, $${shift.hourlyRate}/hr). My verified MoonCall Passport credentials are available on request.`;
 
     try {
       const { thread, message } = await createInterestThread(
@@ -493,7 +493,7 @@ export default function App() {
         appliedDate: new Date().toISOString().split('T')[0],
         status: 'Credentialing Review',
         hospitalNotes: `Resident ${residentName} applied for "${shift.title}" at ${hospital.name}. Passport credentials attached for review.`,
-        passportShareToken: `MOONDOC-${profile.licenseState}-${Math.floor(10000 + Math.random() * 90000)}`,
+        passportShareToken: `MOONCALL-${profile.licenseState}-${Math.floor(10000 + Math.random() * 90000)}`,
         applicantProfile: profile,
         messages: [message],
         realThreadId: thread.id,
@@ -530,8 +530,8 @@ export default function App() {
       shift: shift,
       appliedDate: new Date().toISOString().split('T')[0],
       status: 'Credentialing Review',
-      hospitalNotes: 'MoonDoc Passport received by Medical Staff Office. Reviewing PD approval letter and state license.',
-      passportShareToken: `MOONDOC-${profile.licenseState}-${Math.floor(10000 + Math.random() * 90000)}`,
+      hospitalNotes: 'MoonCall Passport received by Medical Staff Office. Reviewing PD approval letter and state license.',
+      passportShareToken: `MOONCALL-${profile.licenseState}-${Math.floor(10000 + Math.random() * 90000)}`,
       applicantProfile: profile,
       messages: [
         {
@@ -775,7 +775,7 @@ export default function App() {
   if (isBootstrapping) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-900 text-slate-300 text-sm">
-        Loading MoonDoc...
+        Loading MoonCall...
       </div>
     );
   }

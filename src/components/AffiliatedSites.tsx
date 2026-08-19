@@ -82,7 +82,7 @@ export const AffiliatedSites: React.FC<AffiliatedSitesProps> = ({
         <div className="relative z-10 max-w-3xl space-y-3">
           <div className="inline-flex items-center space-x-2 px-3 py-1 bg-blue-500/20 border border-blue-400/30 rounded-full text-blue-200 text-xs font-bold">
             <Building2 className="w-4 h-4 text-blue-300" />
-            <span>MoonDoc Partner Network</span>
+            <span>MoonCall Partner Network</span>
           </div>
 
           <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
@@ -90,7 +90,7 @@ export const AffiliatedSites: React.FC<AffiliatedSitesProps> = ({
           </h1>
 
           <p className="text-sm text-blue-100/90 leading-relaxed">
-            Select partnered hospital networks and clinic systems where you are interested in future moonlighting opportunities. Expressing interest connects your <strong>MoonDoc Passport</strong> directly with that site's Medical Staff Office (MSO) under their candidate review list and opens direct live chat messaging.
+            Select partnered hospital networks and clinic systems where you are interested in future moonlighting opportunities. Expressing interest connects your <strong>MoonCall Passport</strong> directly with that site's Medical Staff Office (MSO) under their candidate review list and opens direct live chat messaging.
           </p>
 
           <div className="pt-2 flex flex-wrap items-center gap-4 text-xs font-semibold text-blue-200">

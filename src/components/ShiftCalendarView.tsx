@@ -115,7 +115,7 @@ export const ShiftCalendarView: React.FC<ShiftCalendarViewProps> = ({
     let icsContent = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//MoonDoc//Resident Moonlighting Schedule//EN',
+      'PRODID:-//MoonCall//Resident Moonlighting Schedule//EN',
       'CALSCALE:GREGORIAN',
       'METHOD:PUBLISH',
     ];
@@ -131,7 +131,7 @@ export const ShiftCalendarView: React.FC<ShiftCalendarViewProps> = ({
 
       icsContent = icsContent.concat([
         'BEGIN:VEVENT',
-        `UID:moondoc_shift_${app.id}@moondoc.app`,
+        `UID:mooncall_shift_${app.id}@mooncall.app`,
         `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,
         `DTSTART:${dtStart}`,
         `DTEND:${dtEnd}`,
@@ -148,7 +148,7 @@ export const ShiftCalendarView: React.FC<ShiftCalendarViewProps> = ({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `MoonDoc_Moonlighting_Schedule_${year}_${monthNames[monthIndex]}.ics`;
+    link.download = `MoonCall_Moonlighting_Schedule_${year}_${monthNames[monthIndex]}.ics`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

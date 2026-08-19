@@ -168,7 +168,7 @@ export const MyApplications: React.FC<MyApplicationsProps> = ({
             <Building2 className="w-12 h-12 text-slate-400 mx-auto" />
             <h3 className="text-base font-bold text-slate-900">No Shifts Applied Yet</h3>
             <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              Explore the interactive Opportunity Map to find available moonlighting shifts in your area and express apply with your MoonDoc Passport.
+              Explore the interactive Opportunity Map to find available moonlighting shifts in your area and express apply with your MoonCall Passport.
             </p>
           </div>
         ) : (

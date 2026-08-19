@@ -46,7 +46,7 @@ export const DocumentViewerModal: React.FC<DocumentViewerModalProps> = ({ docume
           <div className="flex items-center justify-between pb-3 border-b border-slate-200 text-[11px] text-slate-500 font-sans">
             <span className="flex items-center space-x-2">
               <ShieldCheck className="w-4 h-4 text-green-600" />
-              <span>MoonDoc Tamper-Proof Cryptographic Verification Seal</span>
+              <span>MoonCall Tamper-Proof Cryptographic Verification Seal</span>
             </span>
             <span>Doc ID: {doc.docNumber || 'MD-88301'}</span>
           </div>
@@ -66,7 +66,7 @@ export const DocumentViewerModal: React.FC<DocumentViewerModalProps> = ({ docume
             <div className="py-4 space-y-3 font-sans text-sm text-slate-800 leading-relaxed">
               <p className="font-bold uppercase text-slate-900">OFFICIAL RECORD / VERIFICATION CERTIFICATE</p>
               <p>
-                This certifies that the attached document (<strong className="text-blue-900">{doc.name}</strong>) has been officially verified by MoonDoc automated NPI & Medical Staff Board cross-referencing.
+                This certifies that the attached document (<strong className="text-blue-900">{doc.name}</strong>) has been officially verified by MoonCall automated NPI & Medical Staff Board cross-referencing.
               </p>
               <p className="text-xs text-slate-600">
                 • Document Number: <strong>{doc.docNumber || 'MA-284910-MED'}</strong><br/>
@@ -77,7 +77,7 @@ export const DocumentViewerModal: React.FC<DocumentViewerModalProps> = ({ docume
 
             <div className="pt-6 border-t border-slate-200 flex justify-between items-center text-xs font-sans text-slate-500">
               <span>Digital Signature Hash: 0x8f2a...991e</span>
-              <span className="font-bold text-blue-900">MoonDoc Verified</span>
+              <span className="font-bold text-blue-900">MoonCall Verified</span>
             </div>
           </div>
         </div>

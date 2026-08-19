@@ -1,5 +1,5 @@
 -- ============================================================================
--- MoonDoc — Hospital / MSO Account Schema (Phase 2)
+-- MoonCall — Hospital / MSO Account Schema (Phase 2)
 -- Run this once in your Supabase project's SQL Editor, AFTER schema.sql has
 -- already been run. Safe to re-run (uses "if not exists" / "drop policy if
 -- exists" throughout).

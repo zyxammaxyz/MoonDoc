@@ -114,7 +114,7 @@ export const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
             </h2>
 
             <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
-              Your verified <strong className="text-blue-600">MoonDoc Passport</strong> package has been sent directly to the Medical Staff Office at <strong className="text-slate-900">{shift.hospitalName}</strong>.
+              Your verified <strong className="text-blue-600">MoonCall Passport</strong> package has been sent directly to the Medical Staff Office at <strong className="text-slate-900">{shift.hospitalName}</strong>.
             </p>
 
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-left text-xs space-y-2 max-w-md mx-auto">
@@ -349,7 +349,7 @@ export const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
                     ) : (
                       <>
                         <Send className="w-4 h-4" />
-                        <span>Express Apply with MoonDoc Passport</span>
+                        <span>Express Apply with MoonCall Passport</span>
                       </>
                     )}
                   </button>

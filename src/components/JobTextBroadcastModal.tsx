@@ -14,7 +14,7 @@ export const JobTextBroadcastModal: React.FC<JobTextBroadcastModalProps> = ({
   onCopySuccess,
 }) => {
   // Generate initial well-formatted text breakdown
-  const defaultText = `🏥 MOONDOC SHIFT BROADCAST: ${shift.title}
+  const defaultText = `🏥 MOONCALL SHIFT BROADCAST: ${shift.title}
 ==================================================
 Facility: ${shift.hospitalName}
 Location: ${shift.facilityLocation}
@@ -33,8 +33,8 @@ Specialty: ${shift.specialty}
 📝 Clinical Overview:
 ${shift.description}
 
-⚡ Apply Instantly via MoonDoc Passport:
-https://moondoc.app/apply/${shift.id}
+⚡ Apply Instantly via MoonCall Passport:
+https://mooncall.app/apply/${shift.id}
 
 📞 Hospital MSO Contact:
 moonlighting@${shift.hospitalName.toLowerCase().replace(/[^a-z0-9]/g, '')}.org | (310) 555-0199

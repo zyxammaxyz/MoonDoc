@@ -186,7 +186,7 @@ export function HospitalAdminPortal({
   const [jobEmrSystem, setJobEmrSystem] = useState('Epic Hyperspace');
   const [jobMidlevelSupport, setJobMidlevelSupport] = useState('Dedicated PA/NP on shift until 02:00');
   const [jobUrgency, setJobUrgency] = useState<'Standard' | 'Urgent' | 'High Demand'>('High Demand');
-  const [jobDescription, setJobDescription] = useState('High-volume community ER nocturnist shift. Single-physician coverage with dedicated PA support. Rapid credentialing via MoonDoc Passport.');
+  const [jobDescription, setJobDescription] = useState('High-volume community ER nocturnist shift. Single-physician coverage with dedicated PA support. Rapid credentialing via MoonCall Passport.');
 
   // Handle Form Submit to Publish Job Live
   const handlePublishJob = (e: React.FormEvent) => {
@@ -406,12 +406,12 @@ export function HospitalAdminPortal({
       onUpdateApplicationStatus(
         app.id,
         'Approved',
-        'Automatically Cleared: All required MoonDoc Passport credentials verified by Medical Staff Office.'
+        'Automatically Cleared: All required MoonCall Passport credentials verified by Medical Staff Office.'
       );
 
       onSendMessage(
         app.id,
-        `🎉 Congratulations Dr. ${profile.lastName}! All required MoonDoc Passport credentials have been verified by our MSO team. Your shift application is officially ACCEPTED and CLEARED!`,
+        `🎉 Congratulations Dr. ${profile.lastName}! All required MoonCall Passport credentials have been verified by our MSO team. Your shift application is officially ACCEPTED and CLEARED!`,
         'hospital',
         'Hospital MSO Coordinator'
       );
@@ -1561,7 +1561,7 @@ export function HospitalAdminPortal({
                           onClick={() => {
                             onSendMessage(
                               activeApp.id,
-                              'Your MoonDoc Passport credentials have been verified and approved by the MSO! ✅',
+                              'Your MoonCall Passport credentials have been verified and approved by the MSO! ✅',
                               'hospital',
                               'Hospital MSO Coordinator'
                             );
@@ -1589,7 +1589,7 @@ export function HospitalAdminPortal({
                           onClick={() => {
                             onSendMessage(
                               activeApp.id,
-                              'Please upload your updated CA State Medical License to your MoonDoc Passport vault. 📄',
+                              'Please upload your updated CA State Medical License to your MoonCall Passport vault. 📄',
                               'hospital',
                               'Hospital MSO Coordinator'
                             );
@@ -2134,7 +2134,7 @@ export function HospitalAdminPortal({
               {/* Document CheckList with Toggles */}
               <div>
                 <h3 className="text-sm font-bold text-slate-900 mb-3">
-                  MoonDoc Passport Documents ({activePassportModalApp.applicantProfile?.documents.length})
+                  MoonCall Passport Documents ({activePassportModalApp.applicantProfile?.documents.length})
                 </h3>
 
                 <div className="space-y-3">

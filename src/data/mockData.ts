@@ -166,7 +166,7 @@ export const INITIAL_RESIDENT: ResidentProfile = {
   firstName: 'Jessie',
   lastName: 'Smith',
   title: 'MD',
-  email: 'dr.jessiesmith@moondoc.app',
+  email: 'dr.jessiesmith@mooncall.app',
   phone: '(310) 555-0192',
   headshotUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500&auto=format&fit=crop&q=80',
   residencyProgram: 'UCLA Emergency Medicine (Ronald Reagan/Olive View)',
@@ -642,14 +642,14 @@ export const INITIAL_APPLICATIONS: Application[] = [
     appliedDate: '2026-08-10',
     status: 'Approved',
     hospitalNotes: 'Credentials verified by Dr. Sarah Jenkins. UCLA PD Letter and CA State License verified. Approved for Saturday Night 7 PM shift!',
-    passportShareToken: 'MOONDOC-CA-88401',
+    passportShareToken: 'MOONCALL-CA-88401',
     applicantProfile: INITIAL_RESIDENT, // Dr. Jessie Smith (UCLA)
     messages: [
       {
         id: 'msg_101',
         senderRole: 'resident',
         senderName: 'Dr. Jessie Smith',
-        text: 'Hello! I submitted my MoonDoc Passport for the Saturday Night Community ER nocturnist shift.',
+        text: 'Hello! I submitted my MoonCall Passport for the Saturday Night Community ER nocturnist shift.',
         timestamp: 'Aug 10, 02:15 PM'
       },
       {
@@ -682,14 +682,14 @@ export const INITIAL_APPLICATIONS: Application[] = [
     appliedDate: '2026-08-08',
     status: 'Approved',
     hospitalNotes: 'Roster cleared. Dr. Jessie Smith is fully credentialed for Exer Urgent Care sites.',
-    passportShareToken: 'MOONDOC-EXER-44810',
+    passportShareToken: 'MOONCALL-EXER-44810',
     applicantProfile: INITIAL_RESIDENT,
     messages: [
       {
         id: 'msg_e1',
         senderRole: 'resident',
         senderName: 'Dr. Jessie Smith',
-        text: 'Shared my MoonDoc Passport for Exer Urgent Care fast track shifts.',
+        text: 'Shared my MoonCall Passport for Exer Urgent Care fast track shifts.',
         timestamp: 'Aug 08, 11:20 AM'
       },
       {
@@ -708,14 +708,14 @@ export const INITIAL_APPLICATIONS: Application[] = [
     appliedDate: '2026-08-11',
     status: 'Credentialing Review',
     hospitalNotes: 'Passport submitted by Dr. Jessie Smith to Valley Presbyterian MSO. Reviewing credentials.',
-    passportShareToken: 'MOONDOC-VALLEY-11029',
+    passportShareToken: 'MOONCALL-VALLEY-11029',
     applicantProfile: INITIAL_RESIDENT,
     messages: [
       {
         id: 'msg_v1',
         senderRole: 'resident',
         senderName: 'Dr. Jessie Smith',
-        text: 'Hello Valley Presbyterian team! I submitted my MoonDoc Passport for credentialing clearance.',
+        text: 'Hello Valley Presbyterian team! I submitted my MoonCall Passport for credentialing clearance.',
         timestamp: 'Aug 11, 09:00 AM'
       },
       {
@@ -734,7 +734,7 @@ export const INITIAL_APPLICATIONS: Application[] = [
     appliedDate: '2026-08-09',
     status: 'Approved',
     hospitalNotes: 'Credentials 100% verified by MSO. Cleared for upcoming urgent care fast-track shift.',
-    passportShareToken: 'MOONDOC-HARBOR-55102',
+    passportShareToken: 'MOONCALL-HARBOR-55102',
     applicantProfile: MOCK_OTHER_RESIDENTS[2], // Dr. Ananya Sharma (Harbor-UCLA)
     messages: [
       {
@@ -764,7 +764,7 @@ export const INITIAL_APPLICATIONS: Application[] = [
     appliedDate: '2026-08-11',
     status: 'Credentialing Review',
     hospitalNotes: 'Passport submitted by Dr. Kevin Park. MSO reviewing malpractice binder.',
-    passportShareToken: 'MOONDOC-USC-33821',
+    passportShareToken: 'MOONCALL-USC-33821',
     applicantProfile: MOCK_OTHER_RESIDENTS[0], // Dr. Kevin Park (Keck USC)
     messages: [
       {
@@ -783,7 +783,7 @@ export const INITIAL_APPLICATIONS: Application[] = [
     appliedDate: '2026-08-11',
     status: 'Credentialing Review',
     hospitalNotes: 'Passport received by Valley Presbyterian MSO. Pending final malpractice binder attachment.',
-    passportShareToken: 'MOONDOC-KP-99203',
+    passportShareToken: 'MOONCALL-KP-99203',
     applicantProfile: MOCK_OTHER_RESIDENTS[1], // Dr. Maya Lin (Kaiser SoCal)
     messages: [
       {
@@ -817,7 +817,7 @@ export const INITIAL_APPLICATIONS: Application[] = [
     appliedDate: '2026-07-25',
     status: 'Completed',
     hospitalNotes: 'Shift completed with excellent clinical evaluations. Direct deposit dispatched.',
-    passportShareToken: 'MOONDOC-CEDARS-99104',
+    passportShareToken: 'MOONCALL-CEDARS-99104',
     applicantProfile: MOCK_OTHER_RESIDENTS[3], // Dr. Marcus Taylor (Cedars-Sinai)
     messages: [
       {
@@ -840,7 +840,7 @@ export const INITIAL_APPLICATIONS: Application[] = [
     appliedDate: '2026-07-28',
     status: 'Completed',
     hospitalNotes: 'Shift completed successfully. Payment processed via Direct Deposit.',
-    passportShareToken: 'MOONDOC-EXER-77102',
+    passportShareToken: 'MOONCALL-EXER-77102',
     applicantProfile: MOCK_OTHER_RESIDENTS[4], // Dr. Elena Rostova (LA General)
     messages: [
       {

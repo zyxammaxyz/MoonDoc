@@ -102,7 +102,7 @@ export const FinancesDashboard: React.FC<FinancesDashboardProps> = ({ applicatio
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `MoonDoc_Earnings_Statement_${profile.lastName}_2026.csv`);
+    link.setAttribute('download', `MoonCall_Earnings_Statement_${profile.lastName}_2026.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

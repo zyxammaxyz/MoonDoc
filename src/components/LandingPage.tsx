@@ -363,7 +363,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-extrabold text-lg text-white tracking-tight">MoonDoc</span>
+                <span className="font-extrabold text-lg text-white tracking-tight">MoonCall</span>
                 <span className="px-2 py-0.5 text-[10px] font-bold bg-blue-500/20 text-blue-300 rounded-full border border-blue-500/30">
                   Dual Platform
                 </span>
@@ -1217,7 +1217,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
 
       {/* Footer */}
       <footer className="border-t border-slate-800 bg-slate-950/80 py-6 text-center text-xs text-slate-500 space-y-1">
-        <p>© 2026 MoonDoc Health Technologies Inc. • Medical Resident Moonlighting Platform</p>
+        <p>© 2026 MoonCall Health Technologies Inc. • Medical Resident Moonlighting Platform</p>
         <p className="text-[11px] text-slate-600">All hospital names and hourly rates shown for illustrative demo preview.</p>
       </footer>
 

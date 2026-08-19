@@ -195,7 +195,7 @@ export const ApplicationChatModal: React.FC<ApplicationChatModalProps> = ({
   ];
 
   const hospitalQuickPrompts = [
-    'Your MoonDoc Passport has been approved by MSO.',
+    'Your MoonCall Passport has been approved by MSO.',
     'Please report to Room 3B in the main ED at 06:45 AM.',
     'EPIC logins dispatched to your registered email address.',
     'Parking pass code is #4920 at the South Garage entrance.'
@@ -313,7 +313,7 @@ export const ApplicationChatModal: React.FC<ApplicationChatModalProps> = ({
                     {standardDocChecklist.length > 0 && (
                       <div className="space-y-1.5">
                         <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                          From Your MoonDoc Passport
+                          From Your MoonCall Passport
                         </p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                           {standardDocChecklist.map((item) => (
