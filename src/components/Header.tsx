@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ResidentProfile, ResidentNotification } from '../types';
-import { Stethoscope, MapPin, ShieldCheck, FileCheck, DollarSign, Clock, Building2, LogOut, Hospital, Bell, Sparkles, CheckCircle2, MessageSquare, X } from 'lucide-react';
+import { MapPin, ShieldCheck, FileCheck, DollarSign, Clock, Building2, LogOut, Hospital, Bell, Sparkles, CheckCircle2, MessageSquare, X } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: 'map' | 'vault' | 'applications' | 'communications' | 'finances' | 'hours' | 'affiliated_sites' | 'hospital_preview';
@@ -40,8 +40,8 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Logo & Brand */}
           <div className="flex items-center space-x-3 cursor-pointer min-w-0 shrink-0" onClick={() => setActiveTab('map')}>
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-sm">
-              <Stethoscope className="w-6 h-6" />
+            <div className="w-10 h-10 rounded-lg overflow-hidden shadow-sm shrink-0">
+              <img src="/brand/logo.png" alt="MoonCall" className="w-full h-full object-cover" />
             </div>
             <div>
               <div className="flex items-center space-x-2">

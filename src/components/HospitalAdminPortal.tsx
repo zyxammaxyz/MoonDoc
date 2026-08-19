@@ -19,7 +19,6 @@ import {
   PlusCircle,
   Briefcase,
   MapPin,
-  Stethoscope,
   Send,
   Award,
   Copy,
@@ -439,8 +438,8 @@ export function HospitalAdminPortal({
             
             {/* Left Brand Identity */}
             <div className="flex items-center space-x-3 cursor-pointer" onClick={onSwitchToResident || onLogout}>
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-sm">
-                <Stethoscope className="w-6 h-6" />
+              <div className="w-10 h-10 rounded-lg overflow-hidden shadow-sm shrink-0">
+                <img src="/brand/logo.png" alt="MoonCall" className="w-full h-full object-cover" />
               </div>
               <div>
                 <div className="flex items-center space-x-2">
