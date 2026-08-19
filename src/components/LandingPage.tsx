@@ -26,7 +26,9 @@ import {
   RotateCcw,
   Trash2,
   AlertCircle,
-  X
+  X,
+  MessageSquare,
+  Briefcase
 } from 'lucide-react';
 import { ResidentProfile, MedicalSpecialty, PGYLevel } from '../types';
 import { SOCAL_RESIDENCY_PROGRAMS, INITIAL_RESIDENT } from '../data/mockData';
@@ -50,6 +52,54 @@ interface LandingPageProps {
 // any time to invalidate old links.
 const PREVIEW_ACCESS_PARAM = 'preview';
 const PREVIEW_ACCESS_CODE = 'mooncall-2026';
+
+// "How MoonCall Works" stepper content for the Resident audience. The
+// Hospital System side of this section is coming next — see the disabled
+// "For Hospital Systems" pill next to the section heading below.
+interface HowItWorksStep {
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+const RESIDENT_HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
+  {
+    title: 'Create Your Account & Verify Identity',
+    description:
+      "Sign up as a resident physician and verify your identity to activate your MoonCall account — the same secure login you'll use everywhere on the platform.",
+    icon: UserPlus,
+  },
+  {
+    title: 'Build Your Credential Vault & Passport',
+    description:
+      'Upload your license, DEA, board certifications, and other documents once into your secure Credential Vault. MoonCall packages them into a shareable MoonCall Passport.',
+    icon: UploadCloud,
+  },
+  {
+    title: 'Browse Live Shifts & Connect With Sites',
+    description:
+      'Explore live shift postings on the opportunity map, or connect directly with hospital systems already affiliated with MoonCall to express interest in working with them.',
+    icon: MapPin,
+  },
+  {
+    title: 'Message & Get Cleared — All In-House',
+    description:
+      'Once connected, all communication with the site happens inside MoonCall instead of back-and-forth email. Sites can request extra documents right in the chat, and you upload them straight to the same thread — so clearance moves faster.',
+    icon: MessageSquare,
+  },
+  {
+    title: 'Get Offered the Shift',
+    description:
+      "Once your passport and any site-specific requirements are cleared, the hospital system can officially offer you the open shift — directly through MoonCall.",
+    icon: Briefcase,
+  },
+  {
+    title: 'Shifts, Payment & Hours — Tracked Automatically',
+    description:
+      'MoonCall tracks every shift you take, verifies completion on both your end and the hospital’s, calculates your payment from the posted rate, and keeps a running total of your moonlighting hours.',
+    icon: Clock,
+  },
+];
 
 interface CartoonHospital {
   id: string;
@@ -659,6 +709,63 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
               </p>
             </div>
 
+          </div>
+
+        </div>
+
+        {/* Section 1.5: How MoonCall Works — Stepper */}
+        <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xl space-y-8">
+
+          <div className="text-center max-w-2xl mx-auto space-y-3">
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>How MoonCall Works</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+              From Sign-Up to Paycheck
+            </h2>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Here's exactly how a resident moves through MoonCall — from creating an account to getting paid for a completed shift.
+            </p>
+
+            {/* Audience Pills */}
+            <div className="inline-flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+              <div className="px-4 py-2 rounded-xl text-xs font-extrabold flex items-center space-x-2 bg-blue-600 text-white shadow-md">
+                <User className="w-4 h-4" />
+                <span>For Residents</span>
+              </div>
+              <div className="px-4 py-2 rounded-xl text-xs font-extrabold flex items-center space-x-2 text-slate-400 cursor-not-allowed">
+                <Hospital className="w-4 h-4" />
+                <span>For Hospital Systems</span>
+                <span className="ml-1 px-1.5 py-0.5 text-[9px] font-bold bg-slate-200 text-slate-500 rounded-full">
+                  Coming Soon
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Vertical Step Timeline */}
+          <div className="relative max-w-2xl mx-auto">
+            <div className="absolute left-[19px] top-2 bottom-2 w-0.5 bg-blue-100" />
+            {RESIDENT_HOW_IT_WORKS_STEPS.map((step, index) => {
+              const StepIcon = step.icon;
+              return (
+                <div key={step.title} className="relative flex items-start space-x-4 pb-8 last:pb-0">
+                  <div className="relative z-10 w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-black text-sm shadow-md ring-4 ring-white shrink-0">
+                    {index + 1}
+                  </div>
+                  <div className="pt-1.5 space-y-1.5">
+                    <div className="flex items-center space-x-2">
+                      <div className="p-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 shrink-0">
+                        <StepIcon className="w-4 h-4" />
+                      </div>
+                      <h3 className="text-sm font-black text-slate-900">{step.title}</h3>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed">{step.description}</p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
         </div>
