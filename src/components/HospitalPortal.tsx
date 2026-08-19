@@ -9,6 +9,10 @@ import {
   Plus,
   LogOut,
   AlertTriangle,
+  Users,
+  MessageSquare,
+  Send,
+  Sparkles,
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { resendSignUpCode, signOutResident, getCurrentSession } from '../lib/residentApi';
@@ -21,7 +25,14 @@ import {
   createHospitalSite,
   NewSiteDetails,
 } from '../lib/hospitalApi';
-import { HospitalAccountProfile, HospitalFacility } from '../types';
+import {
+  fetchThreadsForHospitalOwner,
+  fetchMessages,
+  sendMessage,
+  markThreadSeen,
+  SiteInterestThread,
+} from '../lib/interestApi';
+import { HospitalAccountProfile, HospitalFacility, ChatMessage } from '../types';
 
 interface HospitalPortalProps {
   onBack: () => void;
@@ -63,6 +74,15 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
   const [siteError, setSiteError] = useState<string | null>(null);
   const [resendSuccess, setResendSuccess] = useState(false);
 
+  // Dashboard sub-view: your sites vs. residents who've expressed interest
+  const [dashboardView, setDashboardView] = useState<'sites' | 'candidates'>('sites');
+  const [interests, setInterests] = useState<SiteInterestThread[]>([]);
+  const [selectedThread, setSelectedThread] = useState<SiteInterestThread | null>(null);
+  const [threadMessages, setThreadMessages] = useState<ChatMessage[]>([]);
+  const [isLoadingThread, setIsLoadingThread] = useState(false);
+  const [chatInput, setChatInput] = useState('');
+  const [isSendingChat, setIsSendingChat] = useState(false);
+
   // On mount: if there's already a session for a hospital admin (e.g. they
   // clicked the confirmation link), load their dashboard directly.
   useEffect(() => {
@@ -78,8 +98,12 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
           if (existingProfile) {
             setUserId(session.user.id);
             setProfile(existingProfile);
-            const mySites = await fetchMyHospitalSites(session.user.id);
+            const [mySites, myInterests] = await Promise.all([
+              fetchMyHospitalSites(session.user.id),
+              fetchThreadsForHospitalOwner(session.user.id),
+            ]);
             setSites(mySites);
+            setInterests(myInterests);
             setStage('dashboard');
             return;
           }
@@ -91,13 +115,66 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
     })();
   }, []);
 
+  // Poll for newly-expressed resident interest while the dashboard is open,
+  // so a new "Candidates" notification shows up without a manual refresh.
+  useEffect(() => {
+    if (stage !== 'dashboard' || !userId) return;
+    const interval = setInterval(async () => {
+      try {
+        const fresh = await fetchThreadsForHospitalOwner(userId);
+        setInterests(fresh);
+      } catch (err) {
+        console.error('Failed to refresh candidates', err);
+      }
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [stage, userId]);
+
   const loadDashboard = async (uid: string) => {
     const hospitalProfile = await ensureHospitalProfileFromAuthUser(uid);
     setProfile(hospitalProfile);
-    const mySites = await fetchMyHospitalSites(uid);
+    const [mySites, myInterests] = await Promise.all([
+      fetchMyHospitalSites(uid),
+      fetchThreadsForHospitalOwner(uid),
+    ]);
     setSites(mySites);
+    setInterests(myInterests);
     setUserId(uid);
     setStage('dashboard');
+  };
+
+  const handleOpenThread = async (thread: SiteInterestThread) => {
+    setSelectedThread(thread);
+    setIsLoadingThread(true);
+    setThreadMessages([]);
+    try {
+      const msgs = await fetchMessages(thread.id);
+      setThreadMessages(msgs);
+      if (thread.status === 'new') {
+        await markThreadSeen(thread.id);
+        setInterests((prev) => prev.map((t) => (t.id === thread.id ? { ...t, status: 'seen' } : t)));
+      }
+    } catch (err) {
+      console.error('Failed to load candidate thread', err);
+    } finally {
+      setIsLoadingThread(false);
+    }
+  };
+
+  const handleSendChat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedThread || !userId || !chatInput.trim()) return;
+    const text = chatInput.trim();
+    setChatInput('');
+    setIsSendingChat(true);
+    try {
+      const message = await sendMessage(selectedThread.id, 'hospital', userId, profile?.organizationName || 'MSO Team', text);
+      setThreadMessages((prev) => [...prev, message]);
+    } catch (err) {
+      console.error('Failed to send message', err);
+    } finally {
+      setIsSendingChat(false);
+    }
   };
 
   const handleSubmitAuth = async (e: React.FormEvent) => {
@@ -400,6 +477,143 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-8">
+        <div className="flex mb-6 bg-slate-100 rounded-xl p-1 max-w-sm">
+          <button
+            onClick={() => { setDashboardView('sites'); setSelectedThread(null); }}
+            className={`flex-1 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer flex items-center justify-center space-x-1.5 ${
+              dashboardView === 'sites' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'
+            }`}
+          >
+            <MapPin className="w-4 h-4" />
+            <span>Your Sites</span>
+          </button>
+          <button
+            onClick={() => setDashboardView('candidates')}
+            className={`flex-1 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer flex items-center justify-center space-x-1.5 relative ${
+              dashboardView === 'candidates' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            <span>Candidates</span>
+            {interests.some((t) => t.status === 'new') && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-extrabold rounded-full flex items-center justify-center animate-pulse">
+                {interests.filter((t) => t.status === 'new').length}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {dashboardView === 'candidates' ? (
+          selectedThread ? (
+            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col h-[600px]">
+              <div className="p-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => setSelectedThread(null)}
+                    className="p-1.5 hover:bg-slate-800 rounded-lg cursor-pointer"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                  </button>
+                  <div>
+                    <h3 className="text-sm font-bold">{selectedThread.residentName}</h3>
+                    <p className="text-[11px] text-slate-300">
+                      {selectedThread.residentProgram || 'Resident'} · Interested in {selectedThread.hospitalName}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-1 p-5 overflow-y-auto space-y-3 bg-slate-50/60">
+                {isLoadingThread ? (
+                  <div className="flex items-center justify-center h-full">
+                    <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
+                  </div>
+                ) : threadMessages.length === 0 ? (
+                  <div className="text-center py-12 text-slate-400 text-xs">No messages yet.</div>
+                ) : (
+                  threadMessages.map((msg) => {
+                    const isHospital = msg.senderRole === 'hospital';
+                    return (
+                      <div key={msg.id} className={`flex flex-col ${isHospital ? 'items-end' : 'items-start'}`}>
+                        <div
+                          className={`max-w-[75%] p-3 rounded-2xl text-xs leading-relaxed ${
+                            isHospital
+                              ? 'bg-blue-600 text-white rounded-tr-none'
+                              : 'bg-white border border-slate-200 text-slate-900 rounded-tl-none'
+                          }`}
+                        >
+                          <div className={`flex items-center justify-between gap-4 mb-1 pb-1 border-b ${isHospital ? 'border-blue-500 text-blue-100' : 'border-slate-100 text-slate-400'}`}>
+                            <span className="font-bold text-[10px]">{msg.senderName}</span>
+                            <span className="text-[9px]">{msg.timestamp}</span>
+                          </div>
+                          <div className="whitespace-pre-line font-medium">{msg.text}</div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              <form onSubmit={handleSendChat} className="p-3 bg-white border-t border-slate-200 flex items-center space-x-2">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder={`Message ${selectedThread.residentName}...`}
+                  className="flex-1 bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-xs font-medium focus:outline-none focus:border-blue-600"
+                />
+                <button
+                  type="submit"
+                  disabled={isSendingChat || !chatInput.trim()}
+                  className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 cursor-pointer"
+                >
+                  {isSendingChat ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                  <span>Send</span>
+                </button>
+              </form>
+            </div>
+          ) : interests.length === 0 ? (
+            <div className="text-center py-16 bg-white border border-slate-200 rounded-2xl">
+              <Users className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+              <p className="text-slate-700 font-bold text-sm">No interested residents yet</p>
+              <p className="text-xs text-slate-500 mt-1">
+                When a resident expresses interest in one of your sites, they'll show up here.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {interests.map((thread) => (
+                <div
+                  key={thread.id}
+                  onClick={() => handleOpenThread(thread)}
+                  className="bg-white border border-slate-200 rounded-2xl p-4 flex items-start justify-between cursor-pointer hover:border-blue-300 transition-colors"
+                >
+                  <div className="flex items-start space-x-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                      <MessageSquare className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <h3 className="font-bold text-sm text-slate-900">{thread.residentName}</h3>
+                        {thread.status === 'new' && (
+                          <span className="flex items-center space-x-1 text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-md">
+                            <Sparkles className="w-3 h-3" />
+                            <span>New</span>
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500 mt-0.5">{thread.residentProgram || 'Resident'}</p>
+                      <p className="text-[11px] text-blue-700 font-semibold mt-1">
+                        Interested in {thread.hospitalName}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        ) : (
+          <>
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-lg font-bold text-slate-900">Your Sites</h2>
@@ -566,6 +780,8 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
               </div>
             ))}
           </div>
+        )}
+        </>
         )}
       </main>
     </div>

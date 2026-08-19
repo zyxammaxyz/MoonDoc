@@ -138,6 +138,10 @@ export interface Application {
   messages?: ChatMessage[];
   payoutStatus?: 'Pending' | 'Paid';
   payoutDate?: string;
+  // Set only for "expressed interest" entries tied to a REAL hospital
+  // account -- points at the site_interests row backing the real chat
+  // thread. Absent/undefined for everything involving mock hospitals.
+  realThreadId?: string;
 }
 
 export interface AdminNotification {

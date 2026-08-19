@@ -34,6 +34,30 @@ import {
   markNotificationReadRemote,
   signOutResident,
 } from './lib/residentApi';
+import {
+  createInterestThread,
+  fetchMessages as fetchInterestMessages,
+  sendMessage as sendInterestMessage,
+} from './lib/interestApi';
+
+// For any "expressed interest" entries backed by a real hospital account
+// (realThreadId set), pull the latest messages -- including the hospital
+// admin's replies -- from the real site_messages table. Entries tied to mock
+// hospitals pass through untouched.
+async function refreshMessagesForApps(apps: Application[]): Promise<Application[]> {
+  const realApps = apps.filter((a) => a.realThreadId);
+  if (realApps.length === 0) return apps;
+  try {
+    const results = await Promise.all(
+      realApps.map((a) => fetchInterestMessages(a.realThreadId as string))
+    );
+    const messagesByAppId = new Map(realApps.map((a, i) => [a.id, results[i]]));
+    return apps.map((app) => (messagesByAppId.has(app.id) ? { ...app, messages: messagesByAppId.get(app.id) } : app));
+  } catch (err) {
+    console.error('Failed to refresh hospital chat messages', err);
+    return apps;
+  }
+}
 
 const INITIAL_RESIDENT_NOTIFICATIONS: ResidentNotification[] = [
   {
@@ -87,6 +111,13 @@ export default function App() {
     isLoggedInRef.current = isLoggedIn;
   }, [isLoggedIn]);
 
+  // Same pattern, for the real-hospital-chat poller below so it always sees
+  // the latest applications list without needing to recreate its interval.
+  const applicationsRef = useRef(applications);
+  useEffect(() => {
+    applicationsRef.current = applications;
+  }, [applications]);
+
   // A single Supabase Auth pool is shared by residents and hospital admins.
   // We tag hospital sign-ups with account_type metadata at sign-up time (see
   // beginHospitalSignUp) so that when a brand new session shows up — whether
@@ -109,7 +140,7 @@ export default function App() {
       fetchHospitals(),
     ]);
     setProfile(prof);
-    setApplications(apps);
+    setApplications(await refreshMessagesForApps(apps));
     setResidentNotifications(notifs);
     if (sharedShifts.length) setShifts(sharedShifts);
     if (sharedHospitals.length) setHospitals(sharedHospitals);
@@ -267,6 +298,77 @@ export default function App() {
   };
 
 
+  // Real hospital account version of "expressing interest": creates a real,
+  // persisted site_interests + first site_messages row (visible to the
+  // hospital admin as a notification and a real chat thread), then mirrors
+  // it into the local `applications` list so it shows up in the existing
+  // Communications / My Shifts / Affiliated Sites UI exactly like a mock one.
+  const handleConnectRealSite = async (hospital: HospitalFacility) => {
+    if (!session?.user) return;
+    const residentName = `Dr. ${profile.firstName} ${profile.lastName}`;
+    const openingMessage = `Hello! I'm ${residentName} (${profile.residencyProgram}) and I'm interested in future moonlighting opportunities at ${hospital.name}. My verified MoonDoc Passport credentials are available on request.`;
+
+    try {
+      const { thread, message } = await createInterestThread(
+        hospital,
+        session.user.id,
+        residentName,
+        profile.residencyProgram,
+        openingMessage
+      );
+
+      const poolShift: MoonlightingShift = {
+        id: `shift_pool_${hospital.id}_${Date.now()}`,
+        hospitalId: hospital.id,
+        hospitalName: hospital.name,
+        facilityLocation: `${hospital.address}, ${hospital.city}, ${hospital.state}`,
+        lat: hospital.lat,
+        lng: hospital.lng,
+        distanceMiles: 6.2,
+        specialty: profile.specialty,
+        title: `General Moonlighting Candidate Roster (${hospital.name})`,
+        department: 'Medical Staff Office / General Moonlighting Pool',
+        hourlyRate: 175,
+        totalPay: 2100,
+        shiftType: 'Day Shift',
+        startTime: '07:00',
+        endTime: '19:00',
+        date: '2026-08-25',
+        durationHours: 12,
+        pgyRequirement: [profile.pgyLevel],
+        requiredDocIds: ['pd_letter', 'state_license', 'npi_verification', 'dea_certificate'],
+        description: `Resident ${residentName} expressed interest in moonlighting opportunities at ${hospital.name}. MoonDoc Passport attached.`,
+        malpracticeIncluded: true,
+        restCallRoomAvailable: true,
+        mealStipend: true,
+        urgency: 'Standard',
+        spotsAvailable: 5
+      };
+
+      const newApp: Application = {
+        id: `app_conn_${Date.now()}`,
+        shiftId: poolShift.id,
+        shift: poolShift,
+        appliedDate: new Date().toISOString().split('T')[0],
+        status: 'Credentialing Review',
+        hospitalNotes: `Resident ${residentName} connected with ${hospital.name} MSO. Passport credentials attached for review.`,
+        passportShareToken: `MOONDOC-${profile.licenseState}-${Math.floor(10000 + Math.random() * 90000)}`,
+        applicantProfile: profile,
+        messages: [message],
+        realThreadId: thread.id,
+      };
+
+      setApplications((prev) => [newApp, ...prev]);
+      if (isRealResident) {
+        createApplication(newApp, session.user.id).catch((err) =>
+          console.error('Failed to save real-site connection', err)
+        );
+      }
+    } catch (err) {
+      console.error('Failed to connect with real hospital site', err);
+    }
+  };
+
   // Handle Resident Connecting / Expressing Interest in an Affiliated Site
   const handleConnectSite = (hospital: HospitalFacility) => {
     // Check if already connected
@@ -276,6 +378,13 @@ export default function App() {
         app.shift?.hospitalName === hospital.name
     );
     if (existing) return;
+
+    // Real hospital account (has an owner) -> real notification + real chat
+    // thread, instead of the fabricated MSO reply used for mock hospitals.
+    if (hospital.ownerId) {
+      handleConnectRealSite(hospital);
+      return;
+    }
 
     // Create a pool shift object for this hospital
     const poolShift: MoonlightingShift = {
@@ -432,12 +541,41 @@ export default function App() {
         return app;
       })
     );
-    if (isRealResident && session?.user && persistApp) {
+    if (!persistApp) return;
+
+    // Real hospital thread: the real site_messages table is the source of
+    // truth (that's what the hospital admin's dashboard reads from), so send
+    // there instead of writing this fabricated message into `applications`.
+    if (persistApp.realThreadId && session?.user) {
+      sendInterestMessage(persistApp.realThreadId, senderRole, session.user.id, senderName, text).catch((err) =>
+        console.error('Failed to send message to hospital', err)
+      );
+      return;
+    }
+
+    if (isRealResident && session?.user) {
       updateApplication(persistApp, session.user.id).catch((err) =>
         console.error('Failed to save message', err)
       );
     }
   };
+
+  // Poll for hospital replies while the resident has the Chat tab open.
+  useEffect(() => {
+    if (activeTab !== 'communications') return;
+    let cancelled = false;
+    const tick = async () => {
+      const refreshed = await refreshMessagesForApps(applicationsRef.current);
+      if (!cancelled) setApplications(refreshed);
+    };
+    tick();
+    const interval = setInterval(tick, 8000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   // Handle resident marking an approved shift as completed
   const handleMarkShiftCompleted = (appId: string) => {

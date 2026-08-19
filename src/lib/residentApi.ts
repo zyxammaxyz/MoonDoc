@@ -96,6 +96,7 @@ interface ApplicationRow {
   payout_date: string | null;
   messages: ChatMessage[];
   shift_snapshot: MoonlightingShift;
+  real_thread_id: string | null;
 }
 
 function applicationRowToApplication(row: ApplicationRow): Application {
@@ -110,6 +111,7 @@ function applicationRowToApplication(row: ApplicationRow): Application {
     messages: row.messages || [],
     payoutStatus: row.payout_status || undefined,
     payoutDate: row.payout_date || undefined,
+    realThreadId: row.real_thread_id || undefined,
   };
 }
 
@@ -126,6 +128,7 @@ function applicationToRow(app: Application, residentId: string, applicantProfile
     payout_date: app.payoutDate || null,
     messages: app.messages || [],
     shift_snapshot: app.shift,
+    real_thread_id: app.realThreadId || null,
     updated_at: new Date().toISOString(),
   };
 }
