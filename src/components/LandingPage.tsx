@@ -368,6 +368,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
     document.getElementById('auth-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
+  // Same as above, but jumps straight to the "Create New Account" tab —
+  // used by the early-access CTA between the map preview and the "How
+  // MoonCall Works" section.
+  const scrollToCreateAccount = () => {
+    setLoginRole('resident');
+    setIsSignUp(true);
+    document.getElementById('auth-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans relative overflow-x-hidden selection:bg-blue-600 selection:text-white">
       
@@ -530,7 +539,44 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
 
         </div>
 
-        {/* Section 1.5: How MoonCall Works — Stepper */}
+        {/* Section 1.5: Early Access CTA — entices sign-ups now, before many
+            real sites are live, by framing it as securing priority access
+            rather than "there's nothing here yet." */}
+        <div className="bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-700 rounded-3xl p-6 sm:p-10 shadow-xl text-center text-white relative overflow-hidden">
+          <div className="absolute -top-12 -right-12 w-56 h-56 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-12 -left-12 w-56 h-56 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative max-w-2xl mx-auto space-y-4">
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-white/15 border border-white/20 text-xs font-bold">
+              <Zap className="w-3.5 h-3.5 text-amber-300" />
+              <span>Early Access — New Sites Onboarding Now</span>
+            </div>
+
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
+              Be First in Line When New Shifts Go Live
+            </h2>
+
+            <p className="text-sm sm:text-base text-blue-50/90 leading-relaxed">
+              MoonCall is actively onboarding hospital systems, urgent cares, and EDs across SoCal. Create your free account now, build your Credential Vault, and you'll get priority notified the moment real shifts open near you — before anyone else even sees them.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+              <button
+                onClick={scrollToCreateAccount}
+                className="px-6 py-3 bg-white text-blue-700 hover:bg-blue-50 rounded-xl font-bold text-sm shadow-lg shadow-black/10 flex items-center space-x-2 transition-all"
+              >
+                <span>Create My Free Account</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              <span className="text-xs text-blue-100 flex items-center space-x-1.5">
+                <Bell className="w-3.5 h-3.5" />
+                <span>Takes 2 minutes — free for residents, always.</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 1.75: How MoonCall Works — Stepper */}
         <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xl space-y-8">
 
           <div className="text-center max-w-2xl mx-auto space-y-3">
