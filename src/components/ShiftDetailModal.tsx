@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MoonlightingShift, CredentialDocument, ResidentProfile } from '../types';
 import {
   X,
@@ -17,8 +17,11 @@ import {
   Sparkles,
   FileCheck,
   FilePlus,
-  ArrowRight
+  ArrowRight,
+  FileText,
+  MessageSquare
 } from 'lucide-react';
+import { fetchCustomDocRequests, CustomDocRequest } from '../lib/interestApi';
 
 interface ShiftDetailModalProps {
   shift: MoonlightingShift | null;
@@ -41,6 +44,27 @@ export const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
 
   const [isApplying, setIsApplying] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
+  // Any additional, hospital-specific documents this job asks for on top of
+  // the standard passport checklist below. These are informational here --
+  // actually uploading a file for one only happens once connected, from
+  // this application's real chat (see ApplicationChatModal).
+  const [customDocRequests, setCustomDocRequests] = useState<CustomDocRequest[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchCustomDocRequests(shift.id)
+      .then((requests) => {
+        if (!cancelled) setCustomDocRequests(requests);
+      })
+      .catch(() => {
+        // Harmless for mock shifts / no backend configured -- just means
+        // no custom requests to show.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [shift.id]);
 
   // Check requirement match against resident's documents
   const documentChecklist = shift.requiredDocIds.map((docId) => {
@@ -249,6 +273,36 @@ export const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
                 ))}
               </div>
             </div>
+
+            {/* Additional, hospital-specific document requests (beyond the
+                standard passport checklist above) */}
+            {customDocRequests.length > 0 && (
+              <div className="space-y-2 pt-1">
+                <h3 className="text-xs font-bold text-slate-800 flex items-center space-x-2">
+                  <FileText className="w-4 h-4 text-blue-600" />
+                  <span>Additional Documents Requested by {shift.hospitalName}</span>
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  {customDocRequests.map((req) => (
+                    <div
+                      key={req.id}
+                      className="p-2.5 rounded-xl border bg-amber-50 border-amber-200 text-amber-800 flex items-center space-x-2"
+                    >
+                      <FileText className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                      <span className="font-semibold truncate">{req.label}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[11px] text-slate-500 flex items-center space-x-1.5">
+                  <MessageSquare className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                  <span>
+                    {isAlreadyApplied
+                      ? "Upload these from this application's chat (open it from My Applications or Affiliated Sites)."
+                      : 'Uploaded from the real chat once you apply and connect with this site.'}
+                  </span>
+                </p>
+              </div>
+            )}
 
             {/* Footer Action */}
             <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-4">

@@ -60,16 +60,15 @@ create policy "Hospital owner manages own custom doc requests"
   using (owner_id = auth.uid())
   with check (owner_id = auth.uid());
 
+-- Public read, same as hospitals_select_all / shifts_select_all -- a
+-- resident should see what a job requires (including custom asks) before
+-- applying, not just after connecting. Only the ACTUAL uploaded file
+-- (custom_document_submissions) stays tightly scoped.
 drop policy if exists "Connected residents can view custom doc requests" on custom_document_requests;
-create policy "Connected residents can view custom doc requests"
+drop policy if exists "Anyone signed in can view custom doc requests" on custom_document_requests;
+create policy "Anyone signed in can view custom doc requests"
   on custom_document_requests for select
-  using (
-    exists (
-      select 1 from site_interests
-      where site_interests.shift_id = custom_document_requests.shift_id
-        and site_interests.resident_id = auth.uid()
-    )
-  );
+  using (auth.role() = 'authenticated');
 
 -- ============================================================================
 -- 3. custom_document_submissions: a resident's uploaded file fulfilling one
