@@ -59,7 +59,7 @@ export const Header: React.FC<HeaderProps> = ({
           <nav className="hidden xl:flex flex-1 justify-center items-center space-x-1 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200 overflow-x-auto min-w-0">
             <button
               onClick={() => setActiveTab('map')}
-              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
+              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 shrink-0 whitespace-nowrap ${
                 activeTab === 'map'
                   ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
@@ -71,7 +71,7 @@ export const Header: React.FC<HeaderProps> = ({
 
             <button
               onClick={() => setActiveTab('affiliated_sites')}
-              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
+              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 shrink-0 whitespace-nowrap ${
                 activeTab === 'affiliated_sites'
                   ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
@@ -83,7 +83,7 @@ export const Header: React.FC<HeaderProps> = ({
 
             <button
               onClick={() => setActiveTab('vault')}
-              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 relative ${
+              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 shrink-0 whitespace-nowrap relative ${
                 activeTab === 'vault'
                   ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
@@ -104,7 +104,7 @@ export const Header: React.FC<HeaderProps> = ({
 
             <button
               onClick={() => setActiveTab('hospital_preview')}
-              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
+              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 shrink-0 whitespace-nowrap ${
                 activeTab === 'hospital_preview'
                   ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
@@ -116,7 +116,7 @@ export const Header: React.FC<HeaderProps> = ({
 
             <button
               onClick={() => setActiveTab('applications')}
-              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
+              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 shrink-0 whitespace-nowrap ${
                 activeTab === 'applications'
                   ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
@@ -133,7 +133,7 @@ export const Header: React.FC<HeaderProps> = ({
 
             <button
               onClick={() => setActiveTab('communications')}
-              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
+              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 shrink-0 whitespace-nowrap ${
                 activeTab === 'communications'
                   ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
@@ -145,7 +145,7 @@ export const Header: React.FC<HeaderProps> = ({
 
             <button
               onClick={() => setActiveTab('finances')}
-              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
+              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 shrink-0 whitespace-nowrap ${
                 activeTab === 'finances'
                   ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
@@ -162,7 +162,7 @@ export const Header: React.FC<HeaderProps> = ({
 
             <button
               onClick={() => setActiveTab('hours')}
-              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
+              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 shrink-0 whitespace-nowrap ${
                 activeTab === 'hours'
                   ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
