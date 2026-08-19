@@ -41,7 +41,7 @@ import {
 import { MapView } from './MapView';
 
 interface LandingPageProps {
-  onLogin: (role?: 'resident' | 'admin', customProfile?: ResidentProfile, isDemo?: boolean) => void;
+  onLogin: (role?: 'resident' | 'admin', customProfile?: ResidentProfile, isDemo?: boolean) => void | Promise<void>;
   onShowHospitalPortal?: () => void;
 }
 
@@ -326,8 +326,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
         return;
       }
       // App.tsx listens for the auth session change and loads the resident's
-      // real profile from the database, so we just flip into the app here.
-      onLogin('resident');
+      // real profile from the database. Await it (rather than fire-and-forget)
+      // so that if it can't confirm a session/profile, the error it throws
+      // lands here as signInError instead of becoming a silent unhandled
+      // rejection that leaves the resident stuck (or worse, previously,
+      // silently shown the built-in demo profile).
+      await onLogin('resident');
     } catch (err: any) {
       setSignInError(err?.message || 'Sign in failed. Check your email and password and try again.');
     } finally {

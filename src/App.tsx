@@ -825,6 +825,12 @@ export default function App() {
           }
 
           // Existing account sign-in: pull everything from the database.
+          // IMPORTANT: never fall back to letting them into the app without
+          // a confirmed real session + profile loaded. `profile`/`shifts`/
+          // `hospitals` all default to the built-in demo data (INITIAL_
+          // RESIDENT etc.) — silently flipping isLoggedIn on without loading
+          // the real ones previously showed a signed-in resident the fake
+          // "Dr. Jessie Smith" demo persona instead of their own account.
           try {
             const currentSession = await getCurrentSession();
             if (currentSession?.user) {
@@ -842,13 +848,14 @@ export default function App() {
             }
           } catch (err) {
             console.error('Failed to load resident session after sign-in', err);
+            throw new Error('Signed in, but we could not load your account. Please refresh the page and try again.');
           }
 
-          // Fallback (should not normally happen): still let them in so
-          // they're not stuck on the landing page after a successful auth call.
-          setIsLoggedIn(true);
-          setUserRole('resident');
-          setActiveTab('map');
+          // We authenticated successfully but couldn't confirm a session
+          // just now (a real but rare timing hiccup) -- surface this as an
+          // error so the resident can retry, instead of quietly showing them
+          // the demo account.
+          throw new Error('Signed in, but we could not load your account yet. Please wait a moment and try again.');
         }}
       />
     );
