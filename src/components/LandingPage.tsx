@@ -113,60 +113,75 @@ interface CartoonHospital {
   badge: string;
 }
 
+// Fictional placeholder sites for the animated map preview — deliberately NOT
+// real hospital/urgent care brand names, since MoonCall doesn't have a live
+// affiliation with any named institution yet. Mixes a few different venue
+// types an EM or IM resident might actually moonlight at.
 const DEMO_HOSPITALS: CartoonHospital[] = [
   {
-    id: 'h1',
-    name: 'Valley Presbyterian Community ED',
+    id: 'demo1',
+    name: 'Sunridge Community ED',
     specialty: 'Community ER Physician',
     rate: 165,
     location: 'Van Nuys, CA',
     distance: '3.8 mi',
-    x: 32,
-    y: 28,
+    x: 18,
+    y: 18,
     badge: 'Community ER'
   },
   {
-    id: 'h2',
-    name: 'Exer Urgent Care - Santa Monica',
+    id: 'demo2',
+    name: 'Harbor Crest Urgent Care',
     specialty: 'Urgent Care Fast-Track',
-    rate: 135,
+    rate: 130,
     location: 'Santa Monica, CA',
     distance: '4.2 mi',
-    x: 18,
-    y: 58,
+    x: 45,
+    y: 15,
     badge: 'Urgent Care'
   },
   {
-    id: 'h4',
-    name: 'Kaiser Sunset Urgent Care Center',
-    specialty: 'Urgent Care Moonlighting',
-    rate: 145,
-    location: 'Hollywood, CA',
-    distance: '4.8 mi',
-    x: 52,
-    y: 35,
-    badge: 'Flexible Hours'
+    id: 'demo3',
+    name: 'Golden Valley Express Care',
+    specialty: 'Family & Internal Medicine Urgent Care',
+    rate: 120,
+    location: 'Burbank, CA',
+    distance: '6.1 mi',
+    x: 68,
+    y: 22,
+    badge: 'IM / FM Friendly'
   },
   {
-    id: 'h5',
-    name: 'Glendale Adventist ER Division',
+    id: 'demo4',
+    name: 'Meridian Occupational Health Clinic',
+    specialty: 'Occupational Medicine Moonlighting',
+    rate: 110,
+    location: 'Pasadena, CA',
+    distance: '7.4 mi',
+    x: 90,
+    y: 15,
+    badge: 'Daytime Clinic'
+  },
+  {
+    id: 'demo5',
+    name: 'Northbridge Community Hospital ED',
     specialty: 'Community ED Swing Shift',
     rate: 175,
     location: 'Glendale, CA',
     distance: '6.5 mi',
-    x: 62,
-    y: 22,
+    x: 60,
+    y: 60,
     badge: 'Bonus +$200'
   },
   {
-    id: 'h6',
-    name: 'LA General Medical Center (LAC+USC) ED',
+    id: 'demo6',
+    name: 'Pacific Crest Regional ED',
     specialty: 'Trauma & ED Surge Shift',
     rate: 205,
-    location: 'Los Angeles, CA',
-    distance: '5.4 mi',
-    x: 75,
-    y: 45,
+    location: 'Long Beach, CA',
+    distance: '9.2 mi',
+    x: 85,
+    y: 68,
     badge: 'Nocturnist Surge'
   }
 ];
@@ -530,30 +545,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
             <div className="flex items-center space-x-3 text-xs text-slate-600">
               <span className="flex items-center space-x-1.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
                 <Building2 className="w-3.5 h-3.5 text-blue-400" />
-                <span>Revealed: <strong className="text-slate-900">{Math.min(visibleCount, DEMO_HOSPITALS.length)} / {DEMO_HOSPITALS.length}</strong> Hospitals</span>
-              </span>
-
-              <span className="flex items-center space-x-1.5 text-xs text-blue-700 font-bold bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-200">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>Live Auto-Radar</span>
+                <span>Revealed: <strong className="text-slate-900">{Math.min(visibleCount, DEMO_HOSPITALS.length)} / {DEMO_HOSPITALS.length}</strong> Sites</span>
               </span>
             </div>
           </div>
 
           {/* Cartoon Interactive Map Canvas */}
-          <div className="relative w-full h-[400px] sm:h-[480px] rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 shadow-inner group">
-            
+          <div className="relative w-full h-[400px] sm:h-[480px] rounded-2xl overflow-hidden bg-gradient-to-br from-slate-900 via-slate-950 to-black border border-slate-800 ring-1 ring-white/5 shadow-inner group">
+
             {/* Map Canvas Visual Backing (Stylized dark map mesh) */}
-            <div 
-              className="absolute inset-0 opacity-40 bg-cover bg-center"
+            <div
+              className="absolute inset-0 opacity-30 bg-cover bg-center"
               style={{
-                backgroundImage: `radial-gradient(#334155 1px, transparent 1px), radial-gradient(#1e293b 1px, #020617 1px)`,
+                backgroundImage: `radial-gradient(#475569 1px, transparent 1px), radial-gradient(#1e293b 1px, transparent 1px)`,
                 backgroundSize: `24px 24px, 12px 12px`
               }}
             />
 
             {/* Stylized River & Map roads svg decoration */}
-            <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+            <svg className="absolute inset-0 w-full h-full opacity-15 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
               <path d="M -50 100 Q 200 150 400 300 T 900 450" fill="none" stroke="#3b82f6" strokeWidth="18" strokeLinecap="round" />
               <path d="M 100 -50 Q 300 200 600 250 T 1000 500" fill="none" stroke="#6366f1" strokeWidth="6" strokeDasharray="8,8" />
             </svg>
@@ -579,17 +589,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                     }`}
                   >
                     {/* Badge Pill above icon */}
-                    <div className="bg-slate-900/90 text-white border border-blue-400/40 px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-lg flex items-center space-x-1 whitespace-nowrap mb-1">
+                    <div className="bg-slate-800/95 text-white border border-white/10 px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-lg flex items-center space-x-1 whitespace-nowrap mb-1">
                       <DollarSign className="w-3 h-3 text-emerald-400" />
                       <span className="text-emerald-300 font-black">${hospital.rate}</span>
-                      <span className="text-slate-400 font-normal">/hr</span>
+                      <span className="text-slate-300 font-normal">/hr</span>
                     </div>
 
                     {/* Cartoon Blue Hospital Icon Badge */}
                     <div className={`p-3 rounded-2xl shadow-xl flex items-center justify-center transition-all ${
-                      isActive 
+                      isActive
                         ? 'bg-gradient-to-tr from-blue-600 to-indigo-500 ring-4 ring-blue-400/50 text-white shadow-blue-500/50'
-                        : 'bg-blue-600 text-white hover:bg-blue-500 shadow-blue-900/50'
+                        : 'bg-blue-600 text-white ring-1 ring-white/10 hover:bg-blue-500 shadow-blue-900/50'
                     }`}>
                       <Building2 className="w-5 h-5 text-white" />
                     </div>
@@ -600,7 +610,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                     )}
 
                     {/* Hospital Short Label */}
-                    <span className="mt-1 text-[10px] font-bold text-slate-200 bg-slate-900/80 px-2 py-0.5 rounded-md border border-slate-800 shadow-xs max-w-[110px] truncate text-center">
+                    <span className="mt-1 text-[10px] font-bold text-white bg-slate-800/90 px-2 py-0.5 rounded-md border border-white/10 shadow-xs max-w-[110px] truncate text-center">
                       {hospital.name}
                     </span>
                   </button>
@@ -608,9 +618,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
               );
             })}
 
-            {/* Active Selected Hospital Floating Card overlay */}
+            {/* Active Selected Hospital Floating Card overlay. Fixed to the
+                bottom-left corner — every DEMO_HOSPITALS marker is placed
+                well clear of that corner (see coordinates above), so the
+                card can never cover the pin/label it describes. */}
             {activeHospital && (
-              <div className="absolute bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-80 bg-slate-900/95 border border-blue-500/40 backdrop-blur-md rounded-2xl p-4 shadow-2xl text-white space-y-2 z-40 animate-in slide-in-from-bottom-4 duration-300">
+              <div className="absolute bottom-4 left-4 right-4 sm:right-auto sm:w-80 bg-slate-800/95 border border-white/10 backdrop-blur-md rounded-2xl p-4 shadow-2xl text-white space-y-2 z-40 animate-in slide-in-from-bottom-4 fade-in duration-300">
                 <div className="flex items-start justify-between">
                   <div>
                     <span className="px-2 py-0.5 text-[10px] font-bold bg-blue-500/20 text-blue-300 rounded border border-blue-400/30">
@@ -619,7 +632,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                     <h3 className="font-extrabold text-sm text-white mt-1">
                       {activeHospital.name}
                     </h3>
-                    <p className="text-xs text-slate-600">
+                    <p className="text-xs text-slate-300">
                       {activeHospital.specialty} • {activeHospital.location} ({activeHospital.distance})
                     </p>
                   </div>
@@ -631,7 +644,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs">
+                <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs">
                   <span className="text-slate-400 text-[11px]">
                     Requires Passport Verification
                   </span>
@@ -647,9 +660,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
             )}
 
             {/* Canvas Hint Overlay */}
-            <div className="absolute top-3 left-3 bg-slate-900/80 border border-slate-800 backdrop-blur-md px-3 py-1.5 rounded-xl text-[11px] text-slate-300 font-medium flex items-center space-x-1.5 pointer-events-none">
+            <div className="absolute top-3 left-3 bg-slate-800/90 border border-white/10 backdrop-blur-md px-3 py-1.5 rounded-xl text-[11px] text-slate-200 font-medium flex items-center space-x-1.5 pointer-events-none">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>Click any cartoon hospital to inspect shift rates!</span>
+              <span>Click any site to inspect shift rates!</span>
             </div>
 
           </div>
