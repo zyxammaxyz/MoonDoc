@@ -346,14 +346,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans relative overflow-x-hidden selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans relative overflow-x-hidden selection:bg-blue-600 selection:text-white">
       
       {/* Background Decorative Gradients */}
-      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-200/40 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-indigo-200/40 rounded-full blur-3xl pointer-events-none -z-10" />
 
       {/* Navigation Header */}
-      <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40">
+      <header className="border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           
           <div className="flex items-center space-x-3">
@@ -362,12 +362,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-extrabold text-lg text-white tracking-tight">MoonCall</span>
-                <span className="px-2 py-0.5 text-[10px] font-bold bg-blue-500/20 text-blue-300 rounded-full border border-blue-500/30">
+                <span className="font-extrabold text-lg text-slate-900 tracking-tight">MoonCall</span>
+                <span className="px-2 py-0.5 text-[10px] font-bold bg-blue-50 text-blue-700 rounded-full border border-blue-200">
                   Dual Platform
                 </span>
               </div>
-              <p className="text-[10px] text-slate-400 -mt-0.5">Medical Residents & Hospital MSO</p>
+              <p className="text-[10px] text-slate-500 -mt-0.5">Medical Residents & Hospital MSO</p>
             </div>
           </div>
 
@@ -382,9 +382,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
 
             <button
               onClick={handleAdminDemoAccess}
-              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-blue-300 hover:text-white rounded-xl text-xs font-bold flex items-center space-x-1 transition-all"
+              className="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-slate-900 rounded-xl text-xs font-bold flex items-center space-x-1 transition-all shadow-sm"
             >
-              <Hospital className="w-3.5 h-3.5 text-blue-400" />
+              <Hospital className="w-3.5 h-3.5 text-blue-600" />
               <span>Hospital MSO Admin (Demo)</span>
             </button>
           </div>
@@ -397,38 +397,38 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
         
         {/* Hero Section */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-blue-900/40 border border-blue-500/30 text-blue-300 text-xs font-semibold">
+          <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
             <span>Real-Time Moonlighting Opportunities for Medical Residents</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+          <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
             Explore Open Shifts & Build Credentialing Passports
           </h1>
 
-          <p className="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
             See how top hospitals in your area match medical residents with open moonlight shifts. Streamline your onboarding, claim shifts faster, and track your moonlighting income.
           </p>
         </div>
 
         {/* Section 1: Animated Pop-Up Cartoon Map Preview */}
-        <div className="bg-slate-800/80 border border-slate-700/80 rounded-3xl p-4 sm:p-6 shadow-2xl relative space-y-4">
+        <div className="bg-white border border-slate-200 rounded-3xl p-4 sm:p-6 shadow-xl relative space-y-4">
           
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-700/60">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 rounded-full bg-emerald-500 animate-ping" />
-              <h2 className="text-sm sm:text-base font-bold text-white flex items-center space-x-2">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 flex items-center space-x-2">
                 <span>Live Opportunity Radar — Greater Los Angeles & SoCal</span>
               </h2>
             </div>
 
-            <div className="flex items-center space-x-3 text-xs text-slate-300">
-              <span className="flex items-center space-x-1.5 bg-slate-900/60 px-3 py-1.5 rounded-xl border border-slate-700">
+            <div className="flex items-center space-x-3 text-xs text-slate-600">
+              <span className="flex items-center space-x-1.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
                 <Building2 className="w-3.5 h-3.5 text-blue-400" />
-                <span>Revealed: <strong className="text-white">{Math.min(visibleCount, DEMO_HOSPITALS.length)} / {DEMO_HOSPITALS.length}</strong> Hospitals</span>
+                <span>Revealed: <strong className="text-slate-900">{Math.min(visibleCount, DEMO_HOSPITALS.length)} / {DEMO_HOSPITALS.length}</strong> Hospitals</span>
               </span>
 
-              <span className="flex items-center space-x-1.5 text-xs text-blue-400 font-bold bg-blue-950/60 px-3 py-1.5 rounded-xl border border-blue-500/30">
+              <span className="flex items-center space-x-1.5 text-xs text-blue-700 font-bold bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-200">
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                 <span>Live Auto-Radar</span>
               </span>
@@ -514,7 +514,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                     <h3 className="font-extrabold text-sm text-white mt-1">
                       {activeHospital.name}
                     </h3>
-                    <p className="text-xs text-slate-300">
+                    <p className="text-xs text-slate-600">
                       {activeHospital.specialty} • {activeHospital.location} ({activeHospital.distance})
                     </p>
                   </div>
@@ -553,53 +553,53 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-left pt-2">
             
             {/* Feature 1: Fast-Track Clearance */}
-            <div className="p-4 bg-slate-900/70 rounded-2xl border border-slate-800/80 space-y-1.5 hover:border-blue-500/40 transition-all group">
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5 hover:border-blue-300 transition-all group">
               <div className="flex items-center space-x-2">
-                <div className="p-2 bg-emerald-500/20 text-emerald-400 rounded-xl border border-emerald-500/30 group-hover:scale-105 transition-transform">
+                <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-200 group-hover:scale-105 transition-transform">
                   <Zap className="w-4 h-4 fill-emerald-400" />
                 </div>
-                <h3 className="text-xs font-black text-white uppercase tracking-wider">Fast-Track Clearance</h3>
+                <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">Fast-Track Clearance</h3>
               </div>
-              <p className="text-xs text-slate-300 leading-relaxed">
+              <p className="text-xs text-slate-600 leading-relaxed">
                 Accelerated hospital onboarding & pre-verified MSO credentialing.
               </p>
             </div>
 
             {/* Feature 2: New Job Posting Notifications */}
-            <div className="p-4 bg-slate-900/70 rounded-2xl border border-slate-800/80 space-y-1.5 hover:border-blue-500/40 transition-all group">
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5 hover:border-blue-300 transition-all group">
               <div className="flex items-center space-x-2">
-                <div className="p-2 bg-amber-500/20 text-amber-400 rounded-xl border border-amber-500/30 group-hover:scale-105 transition-transform">
+                <div className="p-2 bg-amber-50 text-amber-600 rounded-xl border border-amber-200 group-hover:scale-105 transition-transform">
                   <Bell className="w-4 h-4" />
                 </div>
-                <h3 className="text-xs font-black text-white uppercase tracking-wider">New Job Notifications</h3>
+                <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">New Job Notifications</h3>
               </div>
-              <p className="text-xs text-slate-300 leading-relaxed">
+              <p className="text-xs text-slate-600 leading-relaxed">
                 Instant priority alerts when partner hospital sites post open shifts.
               </p>
             </div>
 
             {/* Feature 3: Real-Time Payment Tracker */}
-            <div className="p-4 bg-slate-900/70 rounded-2xl border border-slate-800/80 space-y-1.5 hover:border-blue-500/40 transition-all group">
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5 hover:border-blue-300 transition-all group">
               <div className="flex items-center space-x-2">
-                <div className="p-2 bg-blue-500/20 text-blue-400 rounded-xl border border-blue-500/30 group-hover:scale-105 transition-transform">
+                <div className="p-2 bg-blue-50 text-blue-600 rounded-xl border border-blue-200 group-hover:scale-105 transition-transform">
                   <DollarSign className="w-4 h-4" />
                 </div>
-                <h3 className="text-xs font-black text-white uppercase tracking-wider">Payment Tracker</h3>
+                <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">Payment Tracker</h3>
               </div>
-              <p className="text-xs text-slate-300 leading-relaxed">
+              <p className="text-xs text-slate-600 leading-relaxed">
                 Seamlessly track completed hours, shift payouts, and gross earnings.
               </p>
             </div>
 
             {/* Feature 4: 1-Click Credential Passport */}
-            <div className="p-4 bg-slate-900/70 rounded-2xl border border-slate-800/80 space-y-1.5 hover:border-blue-500/40 transition-all group">
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5 hover:border-blue-300 transition-all group">
               <div className="flex items-center space-x-2">
-                <div className="p-2 bg-indigo-500/20 text-indigo-400 rounded-xl border border-indigo-500/30 group-hover:scale-105 transition-transform">
+                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-200 group-hover:scale-105 transition-transform">
                   <ShieldCheck className="w-4 h-4" />
                 </div>
-                <h3 className="text-xs font-black text-white uppercase tracking-wider">1-Click Credential Passport</h3>
+                <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">1-Click Credential Passport</h3>
               </div>
-              <p className="text-xs text-slate-300 leading-relaxed">
+              <p className="text-xs text-slate-600 leading-relaxed">
                 Instantly share verified licenses, NPI, and DEA with medical staff offices.
               </p>
             </div>
@@ -609,23 +609,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
         </div>
 
         {/* Section 2: Sign Up & Log In Portal Card underneath */}
-        <div id="auth-card" className="max-w-xl mx-auto bg-slate-800/90 border border-slate-700/90 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 relative">
+        <div id="auth-card" className="max-w-xl mx-auto bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6 relative">
           {!isSupabaseConfigured && (
-            <div className="p-3 bg-amber-950/40 border border-amber-500/40 rounded-xl text-amber-300 text-[11px] font-medium flex items-center space-x-2">
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-[11px] font-medium flex items-center space-x-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>Sign-up/sign-in isn't connected to a database yet — the site owner still needs to finish the Supabase setup.</span>
             </div>
           )}
           
           {/* Role Selection Tabs */}
-          <div className="flex bg-slate-900 p-1.5 rounded-2xl border border-slate-700/80">
+          <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
             <button
               type="button"
               onClick={() => { setLoginRole('resident'); setIsSignUp(false); }}
               className={`flex-1 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center space-x-2 ${
                 loginRole === 'resident'
                   ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-slate-200'
+                  : 'text-slate-500 hover:text-slate-700'
               }`}
             >
               <User className="w-4 h-4" />
@@ -638,7 +638,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
               className={`flex-1 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center space-x-2 ${
                 loginRole === 'admin'
                   ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-slate-200'
+                  : 'text-slate-500 hover:text-slate-700'
               }`}
             >
               <Hospital className="w-4 h-4" />
@@ -648,12 +648,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
 
           {/* Sub-toggle for Residents: Sign In vs Create Account */}
           {loginRole === 'resident' && (
-            <div className="flex items-center justify-center bg-slate-950/60 p-1 rounded-xl border border-slate-800 text-xs">
+            <div className="flex items-center justify-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
               <button
                 type="button"
                 onClick={() => { setIsSignUp(false); setSignUpStep(1); }}
                 className={`flex-1 py-1.5 rounded-lg font-bold transition-all ${
-                  !isSignUp ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
+                  !isSignUp ? 'bg-white text-slate-900 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
                 Sign In (Existing User)
@@ -662,17 +662,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                 type="button"
                 onClick={() => { setIsSignUp(true); setSignUpStep(1); }}
                 className={`flex-1 py-1.5 rounded-lg font-bold transition-all flex items-center justify-center space-x-1 ${
-                  isSignUp ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
+                  isSignUp ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                <UserPlus className="w-3.5 h-3.5 text-amber-300" />
+                <UserPlus className="w-3.5 h-3.5 text-amber-500" />
                 <span>Create New Account</span>
               </button>
             </div>
           )}
 
           <div className="text-center space-y-1">
-            <h2 className="text-xl sm:text-2xl font-black text-white">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900">
               {loginRole === 'admin'
                 ? 'Hospital MSO Admin Portal'
                 : isSignUp
@@ -684,7 +684,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                   : 'Resident Physician Sign In'
               }
             </h2>
-            <p className="text-xs text-slate-300">
+            <p className="text-xs text-slate-600">
               {loginRole === 'admin'
                 ? 'Manage resident applications, review passports, and sign off on credentials.'
                 : isSignUp
@@ -706,26 +706,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
               <div className="flex items-center space-x-1.5 text-xs">
                 <div className={`flex-1 py-1.5 px-2 rounded-lg text-center font-bold border transition-all text-[11px] ${
                   signUpStep === 1
-                    ? 'bg-blue-600/30 text-blue-300 border-blue-500/50'
-                    : 'bg-emerald-950/40 text-emerald-400 border-emerald-500/30'
+                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                    : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                 }`}>
                   1. Credentials {signUpStep > 1 && '✓'}
                 </div>
-                <ChevronRight className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                 <div className={`flex-1 py-1.5 px-2 rounded-lg text-center font-bold border transition-all text-[11px] ${
                   signUpStep === 2
-                    ? 'bg-blue-600/30 text-blue-300 border-blue-500/50'
+                    ? 'bg-blue-50 text-blue-700 border-blue-200'
                     : signUpStep > 2
-                      ? 'bg-emerald-950/40 text-emerald-400 border-emerald-500/30'
-                      : 'bg-slate-900 text-slate-500 border-slate-800'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-slate-100 text-slate-500 border-slate-200'
                 }`}>
                   2. Details {signUpStep > 2 && '✓'}
                 </div>
-                <ChevronRight className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                 <div className={`flex-1 py-1.5 px-2 rounded-lg text-center font-bold border transition-all text-[11px] ${
                   signUpStep === 3
-                    ? 'bg-blue-600/30 text-blue-300 border-blue-500/50'
-                    : 'bg-slate-900 text-slate-500 border-slate-800'
+                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                    : 'bg-slate-100 text-slate-500 border-slate-200'
                 }`}>
                   3. Verify Email
                 </div>
@@ -735,7 +735,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                 /* Step 1: Username / Email & Password */
                 <form onSubmit={(e) => { e.preventDefault(); if (signUpEmail && signUpPassword) setSignUpStep(2); }} className="space-y-4 text-xs">
                   <div className="space-y-1">
-                    <label className="text-slate-300 font-bold block">
+                    <label className="text-slate-700 font-bold block">
                       Username / Email Address *
                     </label>
                     <input
@@ -744,12 +744,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                       placeholder="e.g. dr.mtoledo@keckmedicine.org"
                       value={signUpEmail}
                       onChange={(e) => setSignUpEmail(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                      className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-slate-300 font-bold block">
+                    <label className="text-slate-700 font-bold block">
                       Choose Password *
                     </label>
                     <div className="relative">
@@ -759,12 +759,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                         placeholder="At least 8 characters"
                         value={signUpPassword}
                         onChange={(e) => setSignUpPassword(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 pr-10"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 pr-10"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-3 text-slate-400 hover:text-slate-200"
+                        className="absolute right-3 top-3 text-slate-500 hover:text-slate-700"
                       >
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -786,11 +786,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                   {/* Name fields */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <div className="space-y-1 sm:col-span-1">
-                      <label className="text-slate-300 font-bold block">Title</label>
+                      <label className="text-slate-700 font-bold block">Title</label>
                       <select
                         value={signUpTitle}
                         onChange={(e) => setSignUpTitle(e.target.value as 'MD' | 'DO')}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-blue-500"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-slate-900 focus:outline-none focus:border-blue-500"
                       >
                         <option value="MD">M.D.</option>
                         <option value="DO">D.O.</option>
@@ -798,26 +798,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                     </div>
 
                     <div className="space-y-1 sm:col-span-1">
-                      <label className="text-slate-300 font-bold block">First Name *</label>
+                      <label className="text-slate-700 font-bold block">First Name *</label>
                       <input
                         type="text"
                         required
                         placeholder="Marcus"
                         value={signUpFirstName}
                         onChange={(e) => setSignUpFirstName(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500"
                       />
                     </div>
 
                     <div className="space-y-1 sm:col-span-1">
-                      <label className="text-slate-300 font-bold block">Last Name *</label>
+                      <label className="text-slate-700 font-bold block">Last Name *</label>
                       <input
                         type="text"
                         required
                         placeholder="Toledo"
                         value={signUpLastName}
                         onChange={(e) => setSignUpLastName(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500"
                       />
                     </div>
                   </div>
@@ -825,20 +825,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                   {/* NPI & Residency Program */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div className="space-y-1">
-                      <label className="text-slate-300 font-bold block">NPI Number (10 digits) *</label>
+                      <label className="text-slate-700 font-bold block">NPI Number (10 digits) *</label>
                       <input
                         type="text"
                         required
                         placeholder="1982048291"
                         value={signUpNpi}
                         onChange={(e) => setSignUpNpi(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-mono"
                       />
                     </div>
 
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-slate-300 font-bold block">Residency Program *</label>
+                        <label className="text-slate-700 font-bold block">Residency Program *</label>
                         <button
                           type="button"
                           onClick={() => {
@@ -848,7 +848,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                               setSignUpProgramSelect('Other');
                             }
                           }}
-                          className="text-[10px] font-extrabold text-amber-300 hover:text-amber-200 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/30 transition-all cursor-pointer"
+                          className="text-[10px] font-extrabold text-amber-700 hover:text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-300 transition-all cursor-pointer"
                         >
                           {signUpProgramSelect === 'Other' ? '← SoCal Dropdown' : '+ Other Institution'}
                         </button>
@@ -857,7 +857,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                       <select
                         value={signUpProgramSelect}
                         onChange={(e) => setSignUpProgramSelect(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-blue-500 text-xs font-medium"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-slate-900 focus:outline-none focus:border-blue-500 text-xs font-medium"
                       >
                         <optgroup label="Southern California Residency Programs">
                           {SOCAL_RESIDENCY_PROGRAMS.map((prog) => (
@@ -873,10 +873,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
 
                   {/* If "Other" is selected, require custom institution name input */}
                   {signUpProgramSelect === 'Other' && (
-                    <div className="p-3 bg-amber-950/30 border border-amber-500/40 rounded-xl space-y-1.5 animate-in fade-in duration-200">
-                      <label className="text-[11px] font-extrabold text-amber-300 block flex items-center justify-between">
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-1.5 animate-in fade-in duration-200">
+                      <label className="text-[11px] font-extrabold text-amber-700 block flex items-center justify-between">
                         <span>Write Residency Institution Name (Required) *</span>
-                        <span className="text-[10px] text-amber-400/80 font-normal">Unlisted Hospital System</span>
+                        <span className="text-[10px] text-amber-600 font-normal">Unlisted Hospital System</span>
                       </label>
                       <input
                         type="text"
@@ -884,7 +884,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                         placeholder="e.g. Stanford Health Care / Mayo Clinic"
                         value={signUpCustomProgram}
                         onChange={(e) => setSignUpCustomProgram(e.target.value)}
-                        className="w-full bg-slate-900 border border-amber-500/60 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400 font-medium text-xs"
+                        className="w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-400 font-medium text-xs"
                       />
                     </div>
                   )}
@@ -892,11 +892,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                   {/* Specialty & PGY Level */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div className="space-y-1">
-                      <label className="text-slate-300 font-bold block">Medical Specialty</label>
+                      <label className="text-slate-700 font-bold block">Medical Specialty</label>
                       <select
                         value={signUpSpecialty}
                         onChange={(e) => setSignUpSpecialty(e.target.value as MedicalSpecialty)}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-blue-500"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-slate-900 focus:outline-none focus:border-blue-500"
                       >
                         <option value="Emergency Medicine">Emergency Medicine</option>
                         <option value="Internal Medicine">Internal Medicine</option>
@@ -909,11 +909,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-slate-300 font-bold block">PGY Training Level</label>
+                      <label className="text-slate-700 font-bold block">PGY Training Level</label>
                       <select
                         value={signUpPgy}
                         onChange={(e) => setSignUpPgy(e.target.value as PGYLevel)}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-blue-500"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-slate-900 focus:outline-none focus:border-blue-500"
                       >
                         <option value="PGY-1">PGY-1 (Intern)</option>
                         <option value="PGY-2">PGY-2</option>
@@ -928,12 +928,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
 
                   {/* DRAG AND DROP Profile Picture Upload Zone */}
                   <div className="space-y-2">
-                    <label className="text-slate-300 font-bold block flex items-center justify-between">
+                    <label className="text-slate-700 font-bold block flex items-center justify-between">
                       <span className="flex items-center space-x-1.5">
-                        <Camera className="w-3.5 h-3.5 text-blue-400" />
+                        <Camera className="w-3.5 h-3.5 text-blue-600" />
                         <span>Profile Picture Upload (Drag & Drop)</span>
                       </span>
-                      <span className="text-[10px] text-slate-400">PNG, JPG, WEBP up to 10MB</span>
+                      <span className="text-[10px] text-slate-500">PNG, JPG, WEBP up to 10MB</span>
                     </label>
 
                     <div
@@ -942,8 +942,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                       onDrop={handlePictureDrop}
                       className={`relative border-2 border-dashed rounded-2xl p-5 text-center transition-all flex flex-col items-center justify-center space-y-2 cursor-pointer ${
                         isDraggingPicture
-                          ? 'border-blue-400 bg-blue-950/60 scale-[1.02]'
-                          : 'border-slate-700 bg-slate-900/80 hover:border-blue-500/60'
+                          ? 'border-blue-400 bg-blue-50 scale-[1.02]'
+                          : 'border-slate-300 bg-slate-50 hover:border-blue-400'
                       }`}
                     >
                       <input
@@ -962,11 +962,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                               className="w-14 h-14 rounded-2xl object-cover border-2 border-emerald-500 shadow-md"
                             />
                             <div>
-                              <span className="text-xs font-bold text-emerald-400 flex items-center space-x-1">
+                              <span className="text-xs font-bold text-emerald-600 flex items-center space-x-1">
                                 <CheckCircle2 className="w-3.5 h-3.5" />
                                 <span>Photo Uploaded!</span>
                               </span>
-                              <p className="text-[11px] text-slate-400">Click or drop to replace</p>
+                              <p className="text-[11px] text-slate-500">Click or drop to replace</p>
                             </div>
                           </div>
                           <button
@@ -975,7 +975,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                               e.stopPropagation();
                               setSignUpHeadshotUrl('');
                             }}
-                            className="p-2 bg-slate-800 hover:bg-rose-950/80 text-slate-400 hover:text-rose-300 rounded-xl border border-slate-700 hover:border-rose-500/50 transition-all cursor-pointer"
+                            className="p-2 bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl border border-slate-200 hover:border-rose-300 transition-all cursor-pointer"
                             title="Remove Photo"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -983,21 +983,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                         </div>
                       ) : (
                         <div className="py-2 flex flex-col items-center">
-                          <div className="p-3 bg-blue-600/20 text-blue-400 rounded-2xl border border-blue-500/30 mb-2">
-                            <UploadCloud className="w-6 h-6 text-blue-400" />
+                          <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl border border-blue-200 mb-2">
+                            <UploadCloud className="w-6 h-6 text-blue-600" />
                           </div>
-                          <p className="text-xs font-bold text-white">
-                            Drag & Drop your physician photo here or <span className="text-blue-400 underline">browse file</span>
+                          <p className="text-xs font-bold text-slate-900">
+                            Drag & Drop your physician photo here or <span className="text-blue-600 underline">browse file</span>
                           </p>
-                          <p className="text-[10px] text-slate-400 mt-1">Optional: You can also upload a photo later in your Vault</p>
+                          <p className="text-[10px] text-slate-500 mt-1">Optional: You can also upload a photo later in your Vault</p>
                         </div>
                       )}
                     </div>
                   </div>
 
                   {signUpStep2Error && (
-                    <div className="p-3 bg-rose-950/60 border border-rose-500/50 rounded-xl text-rose-300 flex items-center space-x-2 animate-in fade-in duration-200">
-                      <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                    <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 flex items-center space-x-2 animate-in fade-in duration-200">
+                      <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
                       <span className="text-[11px] font-medium leading-snug">{signUpStep2Error}</span>
                     </div>
                   )}
@@ -1006,7 +1006,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                     <button
                       type="button"
                       onClick={() => setSignUpStep(1)}
-                      className="px-4 py-3 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-xl text-xs hover:bg-slate-800 cursor-pointer"
+                      className="px-4 py-3 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl text-xs hover:bg-slate-50 cursor-pointer"
                     >
                       ← Back
                     </button>
@@ -1027,41 +1027,41 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                 <div className="space-y-4 text-xs">
 
                   {/* Email Destination Notice Box */}
-                  <div className="bg-gradient-to-r from-blue-950/90 to-slate-900/90 border border-blue-500/40 p-4 rounded-2xl space-y-2.5 shadow-md">
+                  <div className="bg-gradient-to-r from-blue-50 to-white border border-blue-200 p-4 rounded-2xl space-y-2.5 shadow-sm">
                     <div className="flex items-center space-x-2">
-                      <div className="p-2 bg-blue-600/20 text-blue-400 rounded-xl border border-blue-500/30">
-                        <Mail className="w-4 h-4 text-blue-400" />
+                      <div className="p-2 bg-blue-100 text-blue-600 rounded-xl border border-blue-200">
+                        <Mail className="w-4 h-4 text-blue-600" />
                       </div>
                       <div className="text-left">
-                        <span className="text-[11px] font-bold text-slate-300 block">Confirmation Email Sent To</span>
-                        <span className="text-xs font-mono font-extrabold text-blue-300 select-all">
+                        <span className="text-[11px] font-bold text-slate-500 block">Confirmation Email Sent To</span>
+                        <span className="text-xs font-mono font-extrabold text-blue-700 select-all">
                           {signUpEmail}
                         </span>
                       </div>
                     </div>
-                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
                       Open that email and click "Confirm email address." You'll be brought right back here, already
                       signed in — no need to come back to this tab manually.
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-center space-x-2 py-2 text-slate-400">
+                  <div className="flex items-center justify-center space-x-2 py-2 text-slate-500">
                     <Clock className="w-3.5 h-3.5 animate-pulse" />
                     <span className="text-[11px] font-medium">Waiting for email confirmation...</span>
                   </div>
 
                   {/* Error Notification */}
                   {verificationError && (
-                    <div className="p-3 bg-rose-950/60 border border-rose-500/50 rounded-xl text-rose-300 flex items-center space-x-2 animate-in fade-in duration-200">
-                      <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                    <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 flex items-center space-x-2 animate-in fade-in duration-200">
+                      <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
                       <span className="text-[11px] font-medium leading-snug">{verificationError}</span>
                     </div>
                   )}
 
                   {/* Resend Confirmation Banner */}
                   {resendSuccess && (
-                    <div className="p-3 bg-emerald-950/60 border border-emerald-500/50 rounded-xl text-emerald-300 flex items-center space-x-2 animate-in fade-in duration-200">
-                      <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 flex items-center space-x-2 animate-in fade-in duration-200">
+                      <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
                       <span className="text-[11px] font-medium">A new confirmation email has been re-sent to {signUpEmail}.</span>
                     </div>
                   )}
@@ -1070,7 +1070,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                     <button
                       type="button"
                       onClick={() => setSignUpStep(2)}
-                      className="text-slate-400 hover:text-slate-200 font-semibold flex items-center space-x-1 cursor-pointer"
+                      className="text-slate-500 hover:text-slate-700 font-semibold flex items-center space-x-1 cursor-pointer"
                     >
                       <ArrowLeft className="w-3.5 h-3.5" />
                       <span>Edit Profile Info</span>
@@ -1079,7 +1079,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                     <button
                       type="button"
                       onClick={handleResendCode}
-                      className="text-blue-400 hover:text-blue-300 font-semibold flex items-center space-x-1 cursor-pointer"
+                      className="text-blue-600 hover:text-blue-700 font-semibold flex items-center space-x-1 cursor-pointer"
                     >
                       <RotateCcw className="w-3 h-3" />
                       <span>Resend Email</span>
@@ -1095,25 +1095,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
             <>
               {loginRole === 'admin' ? (
                 /* Hospital MSO Admin remains a demo login for this phase */
-                <div className="bg-gradient-to-r from-blue-950/80 to-slate-900/90 border border-blue-500/40 p-4 rounded-2xl space-y-3 shadow-md">
+                <div className="bg-gradient-to-r from-blue-50 to-white border border-blue-200 p-4 rounded-2xl space-y-3 shadow-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-extrabold text-blue-300 flex items-center space-x-1.5 uppercase tracking-wider">
+                    <span className="text-xs font-extrabold text-blue-700 flex items-center space-x-1.5 uppercase tracking-wider">
                       <Key className="w-3.5 h-3.5 text-amber-400" />
                       <span>Hospital MSO Demo Credentials</span>
                     </span>
-                    <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-400/20 text-amber-300 rounded border border-amber-400/30">
+                    <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-50 text-amber-700 rounded border border-amber-300">
                       Demo Only
                     </span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono">
-                    <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
-                      <span className="text-[10px] text-slate-400 font-sans block uppercase font-bold">Username / Email:</span>
-                      <span className="text-white font-bold select-all">{email}</span>
+                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                      <span className="text-[10px] text-slate-500 font-sans block uppercase font-bold">Username / Email:</span>
+                      <span className="text-slate-900 font-bold select-all">{email}</span>
                     </div>
-                    <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
-                      <span className="text-[10px] text-slate-400 font-sans block uppercase font-bold">Password:</span>
-                      <span className="text-emerald-400 font-bold select-all">{password}</span>
+                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                      <span className="text-[10px] text-slate-500 font-sans block uppercase font-bold">Password:</span>
+                      <span className="text-emerald-600 font-bold select-all">{password}</span>
                     </div>
                   </div>
 
@@ -1128,8 +1128,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                 </div>
               ) : (
                 signInError && (
-                  <div className="p-3 bg-rose-950/60 border border-rose-500/50 rounded-xl text-rose-300 flex items-center space-x-2 animate-in fade-in duration-200">
-                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 flex items-center space-x-2 animate-in fade-in duration-200">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
                     <span className="text-[11px] font-medium leading-snug">{signInError}</span>
                   </div>
                 )
@@ -1139,7 +1139,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
               <form onSubmit={handleSubmit} className="space-y-4 text-xs">
 
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-bold block">
+                  <label className="text-slate-700 font-bold block">
                     {loginRole === 'resident' ? 'Resident Email Address' : 'MSO Admin Username'}
                   </label>
                   <div className="relative">
@@ -1148,13 +1148,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-bold block">
+                  <label className="text-slate-700 font-bold block">
                     Password
                   </label>
                   <div className="relative">
@@ -1163,12 +1163,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors pr-10"
+                      className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors pr-10"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-3 text-slate-400 hover:text-slate-200"
+                      className="absolute right-3 top-3 text-slate-500 hover:text-slate-700"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -1205,7 +1205,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
             Represent a hospital or health system?{' '}
             <button
               onClick={onShowHospitalPortal}
-              className="font-bold text-blue-400 hover:text-blue-300 underline cursor-pointer"
+              className="font-bold text-blue-600 hover:text-blue-700 underline cursor-pointer"
             >
               Create an MSO account →
             </button>
@@ -1215,9 +1215,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800 bg-slate-950/80 py-6 text-center text-xs text-slate-500 space-y-1">
+      <footer className="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500 space-y-1">
         <p>© 2026 MoonCall Health Technologies Inc. • Medical Resident Moonlighting Platform</p>
-        <p className="text-[11px] text-slate-600">All hospital names and hourly rates shown for illustrative demo preview.</p>
+        <p className="text-[11px] text-slate-500">All hospital names and hourly rates shown for illustrative demo preview.</p>
       </footer>
 
     </div>
