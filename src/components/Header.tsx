@@ -46,7 +46,7 @@ export const Header: React.FC<HeaderProps> = ({
             <div>
               <div className="flex items-center space-x-2">
                 <span className="text-2xl font-bold tracking-tight text-blue-900">
-                  Moon<span className="text-blue-600">Doc</span>
+                  Moon<span className="text-blue-600">Call</span>
                 </span>
               </div>
               <p className="text-xs text-slate-500 hidden xl:block">

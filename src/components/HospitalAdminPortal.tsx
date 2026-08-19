@@ -445,7 +445,7 @@ export function HospitalAdminPortal({
               <div>
                 <div className="flex items-center space-x-2">
                   <span className="text-2xl font-bold tracking-tight text-white">
-                    Moon<span className="text-blue-400">Doc</span>
+                    Moon<span className="text-blue-400">Call</span>
                   </span>
                   <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-300 border border-blue-400/30 rounded-md">
                     MSO Admin Portal
