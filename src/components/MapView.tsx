@@ -14,6 +14,17 @@ interface MapViewProps {
   hospitals?: HospitalFacility[];
   onConnectSite?: (hospital: HospitalFacility) => void;
   connectedHospitalIds?: string[];
+  // Overrides the root container's height class. Defaults to filling the
+  // main app viewport below the header. Callers embedding this map inside
+  // a bounded-height wrapper (e.g. the public landing page preview) pass
+  // 'h-full' so it fills that wrapper instead.
+  heightClassName?: string;
+  // When true, the map auto-zooms/pans once on first load so every shift
+  // marker is visible, instead of relying on the fixed Hawthorne/zoom-11
+  // default. The default view is tuned for a resident's real-world nearby
+  // search radius, but a small fixed demo dataset can otherwise land mostly
+  // out of frame -- this keeps a preview map fully "populated" on load.
+  fitBoundsToShifts?: boolean;
 }
 
 // Haversine formula to compute distance in miles between two lat/lng points
@@ -47,7 +58,12 @@ export const MapView: React.FC<MapViewProps> = ({
   hospitals = [],
   onConnectSite,
   connectedHospitalIds = [],
+  heightClassName = 'h-[calc(100vh-4rem)]',
+  fitBoundsToShifts = false,
 }) => {
+  // Guards the one-time auto-fit so it never fights a visitor's own pan/zoom
+  // on later re-renders (filter changes, marker selection, etc.).
+  const hasAutoFitRef = useRef(false);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
@@ -326,7 +342,15 @@ export const MapView: React.FC<MapViewProps> = ({
       markersLayerRef.current?.addLayer(marker);
     });
 
-  }, [filteredShifts, selectedShiftId, userLocation, filters.maxDistance, userDocuments]);
+    // One-time auto-fit so a small/spread-out demo dataset is fully visible
+    // on first load, without overriding any pan/zoom the visitor does after.
+    if (fitBoundsToShifts && !hasAutoFitRef.current && filteredShifts.length > 0) {
+      hasAutoFitRef.current = true;
+      const bounds = L.latLngBounds(filteredShifts.map((s) => [s.lat, s.lng] as [number, number]));
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
+    }
+
+  }, [filteredShifts, selectedShiftId, userLocation, filters.maxDistance, userDocuments, fitBoundsToShifts]);
 
   // Facility pins: every registered hospital site shows up here the moment
   // it's geocoded, even before it has any shifts posted. Sites that already
@@ -395,7 +419,7 @@ export const MapView: React.FC<MapViewProps> = ({
   }, [hospitals, shifts, connectedHospitalIds, onConnectSite]);
 
   return (
-    <div className="relative w-full h-[calc(100vh-4rem)] flex flex-col md:flex-row overflow-hidden bg-slate-50 text-slate-900">
+    <div className={`relative w-full ${heightClassName} flex flex-col md:flex-row overflow-hidden bg-slate-50 text-slate-900`}>
        {/* Sidebar Controls & Shift List - Fully Scrollable Container */}
       <div
         ref={sidebarRef}

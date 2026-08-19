@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Building2,
   MapPin,
   DollarSign,
   Sparkles,
@@ -28,16 +27,18 @@ import {
   AlertCircle,
   X,
   MessageSquare,
-  Briefcase
+  Briefcase,
+  FlaskConical,
 } from 'lucide-react';
 import { ResidentProfile, MedicalSpecialty, PGYLevel } from '../types';
-import { SOCAL_RESIDENCY_PROGRAMS, INITIAL_RESIDENT } from '../data/mockData';
+import { SOCAL_RESIDENCY_PROGRAMS, INITIAL_RESIDENT, LANDING_PREVIEW_HOSPITALS, LANDING_PREVIEW_SHIFTS } from '../data/mockData';
 import { isSupabaseConfigured } from '../lib/supabaseClient';
 import {
   beginSignUp,
   resendSignUpCode,
   signInResident,
 } from '../lib/residentApi';
+import { MapView } from './MapView';
 
 interface LandingPageProps {
   onLogin: (role?: 'resident' | 'admin', customProfile?: ResidentProfile, isDemo?: boolean) => void;
@@ -101,95 +102,7 @@ const RESIDENT_HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
   },
 ];
 
-interface CartoonHospital {
-  id: string;
-  name: string;
-  specialty: string;
-  rate: number;
-  location: string;
-  distance: string;
-  x: number; // percentage on map canvas
-  y: number; // percentage on map canvas
-  badge: string;
-}
-
-// Fictional placeholder sites for the animated map preview — deliberately NOT
-// real hospital/urgent care brand names, since MoonCall doesn't have a live
-// affiliation with any named institution yet. Mixes a few different venue
-// types an EM or IM resident might actually moonlight at.
-const DEMO_HOSPITALS: CartoonHospital[] = [
-  {
-    id: 'demo1',
-    name: 'Sunridge Community ED',
-    specialty: 'Community ER Physician',
-    rate: 165,
-    location: 'Van Nuys, CA',
-    distance: '3.8 mi',
-    x: 18,
-    y: 18,
-    badge: 'Community ER'
-  },
-  {
-    id: 'demo2',
-    name: 'Harbor Crest Urgent Care',
-    specialty: 'Urgent Care Fast-Track',
-    rate: 130,
-    location: 'Santa Monica, CA',
-    distance: '4.2 mi',
-    x: 45,
-    y: 15,
-    badge: 'Urgent Care'
-  },
-  {
-    id: 'demo3',
-    name: 'Golden Valley Express Care',
-    specialty: 'Family & Internal Medicine Urgent Care',
-    rate: 120,
-    location: 'Burbank, CA',
-    distance: '6.1 mi',
-    x: 68,
-    y: 22,
-    badge: 'IM / FM Friendly'
-  },
-  {
-    id: 'demo4',
-    name: 'Meridian Occupational Health Clinic',
-    specialty: 'Occupational Medicine Moonlighting',
-    rate: 110,
-    location: 'Pasadena, CA',
-    distance: '7.4 mi',
-    x: 90,
-    y: 15,
-    badge: 'Daytime Clinic'
-  },
-  {
-    id: 'demo5',
-    name: 'Northbridge Community Hospital ED',
-    specialty: 'Community ED Swing Shift',
-    rate: 175,
-    location: 'Glendale, CA',
-    distance: '6.5 mi',
-    x: 60,
-    y: 60,
-    badge: 'Bonus +$200'
-  },
-  {
-    id: 'demo6',
-    name: 'Pacific Crest Regional ED',
-    specialty: 'Trauma & ED Surge Shift',
-    rate: 205,
-    location: 'Long Beach, CA',
-    distance: '9.2 mi',
-    x: 85,
-    y: 68,
-    badge: 'Nocturnist Surge'
-  }
-];
-
 export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospitalPortal }) => {
-  const [visibleCount, setVisibleCount] = useState<number>(0);
-  const [activeHospital, setActiveHospital] = useState<CartoonHospital | null>(null);
-
   // Both demo modes (Resident + Hospital MSO Admin) stay hidden from public
   // visitors until unlocked via the secret preview link or footer tap combo.
   // Deliberately NOT persisted anywhere (no localStorage/sessionStorage) —
@@ -319,28 +232,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
       setPassword('');
     }
   }, [loginRole]);
-
-  // Continuously loop hospital pop-ups on map automatically
-  useEffect(() => {
-    setVisibleCount(0);
-    const interval = setInterval(() => {
-      setVisibleCount((prev) => {
-        if (prev < DEMO_HOSPITALS.length) {
-          const nextIndex = prev;
-          setActiveHospital(DEMO_HOSPITALS[nextIndex]);
-          return prev + 1;
-        } else if (prev < DEMO_HOSPITALS.length + 3) {
-          // Pause briefly with all hospitals visible before restarting
-          return prev + 1;
-        } else {
-          setActiveHospital(null);
-          return 0;
-        }
-      });
-    }, 800); // Pops up every 800ms and loops indefinitely
-
-    return () => clearInterval(interval);
-  }, []);
 
   const currentSignUpProgram = () =>
     signUpProgramSelect === 'Other'
@@ -531,140 +422,49 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
           </p>
         </div>
 
-        {/* Section 1: Animated Pop-Up Cartoon Map Preview */}
+        {/* Section 1: Live Opportunity Map Preview — the SAME MapView component
+            used inside the real app, fed a fictional demo dataset (see
+            LANDING_PREVIEW_HOSPITALS / LANDING_PREVIEW_SHIFTS in mockData.ts)
+            since MoonCall doesn't have live affiliated sites posting yet. */}
         <div className="bg-white border border-slate-200 rounded-3xl p-4 sm:p-6 shadow-xl relative space-y-4">
-          
+
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 rounded-full bg-emerald-500 animate-ping" />
               <h2 className="text-sm sm:text-base font-bold text-slate-900 flex items-center space-x-2">
-                <span>Live Opportunity Radar — Greater Los Angeles & SoCal</span>
+                <span>Opportunity Map Preview — Greater Los Angeles & SoCal</span>
               </h2>
             </div>
 
-            <div className="flex items-center space-x-3 text-xs text-slate-600">
-              <span className="flex items-center space-x-1.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
-                <Building2 className="w-3.5 h-3.5 text-blue-400" />
-                <span>Revealed: <strong className="text-slate-900">{Math.min(visibleCount, DEMO_HOSPITALS.length)} / {DEMO_HOSPITALS.length}</strong> Sites</span>
-              </span>
-            </div>
+            <span className="flex items-center space-x-1.5 bg-amber-50 text-amber-800 px-3 py-1.5 rounded-xl border border-amber-200 text-xs font-bold shrink-0">
+              <FlaskConical className="w-3.5 h-3.5" />
+              <span>Demo Data</span>
+            </span>
           </div>
 
-          {/* Cartoon Interactive Map Canvas */}
-          <div className="relative w-full h-[400px] sm:h-[480px] rounded-2xl overflow-hidden bg-gradient-to-br from-slate-900 via-slate-950 to-black border border-slate-800 ring-1 ring-white/5 shadow-inner group">
+          {/* Disclaimer: this is the real, interactive map component, but the
+              sites/shifts on it are fictional placeholders until real hospital
+              systems go live on MoonCall. */}
+          <div className="flex items-start space-x-2.5 bg-blue-50 border border-blue-200 rounded-2xl px-4 py-3 text-xs text-blue-900">
+            <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+            <p className="leading-relaxed">
+              <strong className="font-extrabold">This is a demonstration.</strong> The map below is fully interactive — pan, zoom, filter, and click sites just like the real app — but every site and shift shown is a fictional placeholder. This is what it'll look like once more hospital systems and sites post real openings on MoonCall.
+            </p>
+          </div>
 
-            {/* Map Canvas Visual Backing (Stylized dark map mesh) */}
-            <div
-              className="absolute inset-0 opacity-30 bg-cover bg-center"
-              style={{
-                backgroundImage: `radial-gradient(#475569 1px, transparent 1px), radial-gradient(#1e293b 1px, transparent 1px)`,
-                backgroundSize: `24px 24px, 12px 12px`
-              }}
+          {/* Real, interactive MapView — same component the signed-in resident
+              app uses, just constrained to a fixed preview height and fed the
+              fictional demo dataset above instead of live data. */}
+          <div className="relative w-full h-[520px] sm:h-[640px] rounded-2xl overflow-hidden border border-slate-200 shadow-inner">
+            <MapView
+              heightClassName="h-full"
+              fitBoundsToShifts
+              shifts={LANDING_PREVIEW_SHIFTS}
+              hospitals={LANDING_PREVIEW_HOSPITALS}
+              userDocuments={[]}
+              onSelectShift={() => {}}
+              onConnectSite={scrollToResidentSignIn}
             />
-
-            {/* Stylized River & Map roads svg decoration */}
-            <svg className="absolute inset-0 w-full h-full opacity-15 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M -50 100 Q 200 150 400 300 T 900 450" fill="none" stroke="#3b82f6" strokeWidth="18" strokeLinecap="round" />
-              <path d="M 100 -50 Q 300 200 600 250 T 1000 500" fill="none" stroke="#6366f1" strokeWidth="6" strokeDasharray="8,8" />
-            </svg>
-
-            {/* Cartoon Pop-Up Hospital Markers */}
-            {DEMO_HOSPITALS.map((hospital, index) => {
-              const isVisible = index < visibleCount;
-              const isActive = activeHospital?.id === hospital.id;
-
-              if (!isVisible) return null;
-
-              return (
-                <div
-                  key={hospital.id}
-                  style={{ left: `${hospital.x}%`, top: `${hospital.y}%` }}
-                  className="absolute -translate-x-1/2 -translate-y-1/2 z-20 transition-all duration-500 ease-out animate-in zoom-in-50 fade-in duration-300"
-                >
-                  {/* Cartoon Hospital Marker Pin Button */}
-                  <button
-                    onClick={() => setActiveHospital(hospital)}
-                    className={`group relative flex flex-col items-center transition-all duration-300 ${
-                      isActive ? 'scale-125 z-30' : 'hover:scale-110 hover:z-20'
-                    }`}
-                  >
-                    {/* Badge Pill above icon */}
-                    <div className="bg-slate-800/95 text-white border border-white/10 px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-lg flex items-center space-x-1 whitespace-nowrap mb-1">
-                      <DollarSign className="w-3 h-3 text-emerald-400" />
-                      <span className="text-emerald-300 font-black">${hospital.rate}</span>
-                      <span className="text-slate-300 font-normal">/hr</span>
-                    </div>
-
-                    {/* Cartoon Blue Hospital Icon Badge */}
-                    <div className={`p-3 rounded-2xl shadow-xl flex items-center justify-center transition-all ${
-                      isActive
-                        ? 'bg-gradient-to-tr from-blue-600 to-indigo-500 ring-4 ring-blue-400/50 text-white shadow-blue-500/50'
-                        : 'bg-blue-600 text-white ring-1 ring-white/10 hover:bg-blue-500 shadow-blue-900/50'
-                    }`}>
-                      <Building2 className="w-5 h-5 text-white" />
-                    </div>
-
-                    {/* Ping Ripple */}
-                    {isActive && (
-                      <span className="absolute bottom-2 w-8 h-8 rounded-full bg-blue-400/30 animate-ping pointer-events-none" />
-                    )}
-
-                    {/* Hospital Short Label */}
-                    <span className="mt-1 text-[10px] font-bold text-white bg-slate-800/90 px-2 py-0.5 rounded-md border border-white/10 shadow-xs max-w-[110px] truncate text-center">
-                      {hospital.name}
-                    </span>
-                  </button>
-                </div>
-              );
-            })}
-
-            {/* Active Selected Hospital Floating Card overlay. Fixed to the
-                bottom-left corner — every DEMO_HOSPITALS marker is placed
-                well clear of that corner (see coordinates above), so the
-                card can never cover the pin/label it describes. */}
-            {activeHospital && (
-              <div className="absolute bottom-4 left-4 right-4 sm:right-auto sm:w-80 bg-slate-800/95 border border-white/10 backdrop-blur-md rounded-2xl p-4 shadow-2xl text-white space-y-2 z-40 animate-in slide-in-from-bottom-4 fade-in duration-300">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="px-2 py-0.5 text-[10px] font-bold bg-blue-500/20 text-blue-300 rounded border border-blue-400/30">
-                      {activeHospital.badge}
-                    </span>
-                    <h3 className="font-extrabold text-sm text-white mt-1">
-                      {activeHospital.name}
-                    </h3>
-                    <p className="text-xs text-slate-300">
-                      {activeHospital.specialty} • {activeHospital.location} ({activeHospital.distance})
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-lg font-black text-emerald-400">
-                      ${activeHospital.rate}
-                    </span>
-                    <span className="text-[10px] text-slate-400 block">/ hour</span>
-                  </div>
-                </div>
-
-                <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs">
-                  <span className="text-slate-400 text-[11px]">
-                    Requires Passport Verification
-                  </span>
-                  <button
-                    onClick={scrollToResidentSignIn}
-                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold text-xs flex items-center space-x-1 transition-all"
-                  >
-                    <span>Sign In to Claim</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Canvas Hint Overlay */}
-            <div className="absolute top-3 left-3 bg-slate-800/90 border border-white/10 backdrop-blur-md px-3 py-1.5 rounded-xl text-[11px] text-slate-200 font-medium flex items-center space-x-1.5 pointer-events-none">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>Click any site to inspect shift rates!</span>
-            </div>
-
           </div>
 
           {/* Key Value Proposition Feature Cards */}
