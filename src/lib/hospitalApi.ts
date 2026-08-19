@@ -162,6 +162,11 @@ export async function createHospitalSite(details: NewSiteDetails, ownerId: strin
     hospitalRating: 5,
     contactPerson: details.contactPerson,
     contactEmail: details.contactEmail,
+    // Critical: this is what lets the resident side recognize this as a
+    // REAL hospital account (vs. a mock one) and route "expressed interest"
+    // into the real notification + chat pipeline instead of the fabricated
+    // demo conversation.
+    ownerId,
   };
 
   const { error } = await supabase.from('hospitals').insert({

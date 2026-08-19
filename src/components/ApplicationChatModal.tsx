@@ -51,7 +51,15 @@ export const ApplicationChatModal: React.FC<ApplicationChatModalProps> = ({
   onClose,
   initialRole = 'resident'
 }) => {
-  const [activeRole, setActiveRole] = useState<'resident' | 'hospital'>(initialRole);
+  // A real hospital account is on the other end of this thread (Harbor UCLA,
+  // etc.) -- their reply has to come from their own real dashboard, so the
+  // "preview as MSO" persona switcher (a demo convenience for mock hospitals
+  // with nobody real on the other side) is disabled here to avoid sending a
+  // message that looks like it came from the hospital but didn't.
+  const isRealThread = !!application.realThreadId;
+  const [activeRole, setActiveRole] = useState<'resident' | 'hospital'>(
+    isRealThread ? 'resident' : initialRole
+  );
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -80,7 +88,9 @@ export const ApplicationChatModal: React.FC<ApplicationChatModalProps> = ({
 
     const senderName =
       activeRole === 'resident'
-        ? 'Dr. Maria Toledo'
+        ? application.applicantProfile
+          ? `Dr. ${application.applicantProfile.firstName} ${application.applicantProfile.lastName}`
+          : 'Dr. Maria Toledo'
         : `${application.shift.hospitalName} MSO Coordinator`;
 
     onSendMessage(application.id, inputText.trim(), activeRole, senderName);
@@ -90,7 +100,9 @@ export const ApplicationChatModal: React.FC<ApplicationChatModalProps> = ({
   const handleQuickPrompt = (promptText: string) => {
     const senderName =
       activeRole === 'resident'
-        ? 'Dr. Maria Toledo'
+        ? application.applicantProfile
+          ? `Dr. ${application.applicantProfile.firstName} ${application.applicantProfile.lastName}`
+          : 'Dr. Maria Toledo'
         : `${application.shift.hospitalName} MSO Coordinator`;
 
     onSendMessage(application.id, promptText, activeRole, senderName);
@@ -148,40 +160,51 @@ export const ApplicationChatModal: React.FC<ApplicationChatModalProps> = ({
           </button>
         </div>
 
-        {/* Sender Persona Switcher Banner */}
-        <div className="bg-slate-100 p-2.5 px-5 border-b border-slate-200 flex items-center justify-between text-xs">
-          <span className="text-slate-600 font-medium hidden sm:inline">
-            Direct Messaging Line:
-          </span>
-          <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
-            <span className="text-[11px] text-slate-500 font-semibold">Replying as:</span>
-            <div className="bg-white p-0.5 rounded-xl border border-slate-200 shadow-sm flex items-center">
-              <button
-                onClick={() => setActiveRole('resident')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center space-x-1 ${
-                  activeRole === 'resident'
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <User className="w-3.5 h-3.5" />
-                <span>Dr. Toledo (Resident)</span>
-              </button>
+        {/* Sender Persona Switcher Banner (mock threads only -- a real
+            hospital account is on the other end of a real thread, so there's
+            no "preview as MSO" to offer) */}
+        {isRealThread ? (
+          <div className="bg-emerald-50 p-2.5 px-5 border-b border-emerald-100 flex items-center justify-center text-xs">
+            <span className="text-[11px] text-emerald-700 font-bold flex items-center space-x-1.5">
+              <Building2 className="w-3.5 h-3.5" />
+              <span>Real chat with {application.shift.hospitalName}'s MSO team</span>
+            </span>
+          </div>
+        ) : (
+          <div className="bg-slate-100 p-2.5 px-5 border-b border-slate-200 flex items-center justify-between text-xs">
+            <span className="text-slate-600 font-medium hidden sm:inline">
+              Direct Messaging Line:
+            </span>
+            <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
+              <span className="text-[11px] text-slate-500 font-semibold">Replying as:</span>
+              <div className="bg-white p-0.5 rounded-xl border border-slate-200 shadow-sm flex items-center">
+                <button
+                  onClick={() => setActiveRole('resident')}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center space-x-1 ${
+                    activeRole === 'resident'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <User className="w-3.5 h-3.5" />
+                  <span>Dr. Toledo (Resident)</span>
+                </button>
 
-              <button
-                onClick={() => setActiveRole('hospital')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center space-x-1 ${
-                  activeRole === 'hospital'
-                    ? 'bg-emerald-700 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Building2 className="w-3.5 h-3.5" />
-                <span>MSO (Hospital)</span>
-              </button>
+                <button
+                  onClick={() => setActiveRole('hospital')}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center space-x-1 ${
+                    activeRole === 'hospital'
+                      ? 'bg-emerald-700 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Building2 className="w-3.5 h-3.5" />
+                  <span>MSO (Hospital)</span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Messages Body */}
         <div className="flex-1 p-5 overflow-y-auto space-y-4 bg-slate-50/50">

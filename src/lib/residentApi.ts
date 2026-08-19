@@ -305,9 +305,15 @@ export async function uploadCredentialDocumentFile(userId: string, docId: string
 // ============================================================================
 
 export async function fetchHospitals(): Promise<HospitalFacility[]> {
-  const { data, error } = await supabase.from('hospitals').select('data');
+  const { data, error } = await supabase.from('hospitals').select('data, owner_id');
   if (error) throw error;
-  return (data || []).map((row) => row.data as HospitalFacility);
+  // Prefer the real owner_id column over whatever's embedded in the JSON
+  // blob -- this makes real hospital sites created before ownerId was added
+  // to that JSON payload work correctly too, with no data migration needed.
+  return (data || []).map((row) => ({
+    ...(row.data as HospitalFacility),
+    ownerId: row.owner_id || (row.data as HospitalFacility)?.ownerId,
+  }));
 }
 
 export async function fetchShifts(): Promise<MoonlightingShift[]> {

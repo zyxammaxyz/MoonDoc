@@ -1,12 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { MoonlightingShift, FilterState, MedicalSpecialty, CredentialDocument } from '../types';
+import { MoonlightingShift, FilterState, MedicalSpecialty, CredentialDocument, HospitalFacility } from '../types';
 import { MapPin, Search, DollarSign, Navigation, ShieldCheck, Clock, Hospital, Filter, Sparkles, CheckCircle2, AlertTriangle, ArrowRight, Target, Compass, Map, ChevronDown, ChevronUp, SlidersHorizontal, ArrowUp } from 'lucide-react';
 
 interface MapViewProps {
   shifts: MoonlightingShift[];
   onSelectShift: (shift: MoonlightingShift) => void;
   userDocuments: CredentialDocument[];
+  // Every registered hospital/MSO site shows up as its own facility pin on
+  // the map the moment its address is geocoded -- even before it has posted
+  // any shifts. Sites that already have an active shift pin nearby skip the
+  // separate facility pin so the map doesn't double up.
+  hospitals?: HospitalFacility[];
+  onConnectSite?: (hospital: HospitalFacility) => void;
+  connectedHospitalIds?: string[];
 }
 
 // Haversine formula to compute distance in miles between two lat/lng points
@@ -33,10 +40,18 @@ const PRESET_LOCATIONS = [
   { name: 'Pasadena, CA', address: '300 E Colorado Blvd, Pasadena, CA 91101', lat: 34.1458, lng: -118.1445 },
 ];
 
-export const MapView: React.FC<MapViewProps> = ({ shifts, onSelectShift, userDocuments }) => {
+export const MapView: React.FC<MapViewProps> = ({
+  shifts,
+  onSelectShift,
+  userDocuments,
+  hospitals = [],
+  onConnectSite,
+  connectedHospitalIds = [],
+}) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
+  const facilityMarkersLayerRef = useRef<L.LayerGroup | null>(null);
   const radiusCircleRef = useRef<L.Circle | null>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
 
@@ -205,6 +220,7 @@ export const MapView: React.FC<MapViewProps> = ({ shifts, onSelectShift, userDoc
 
       mapInstanceRef.current = map;
       markersLayerRef.current = L.layerGroup().addTo(map);
+      facilityMarkersLayerRef.current = L.layerGroup().addTo(map);
     }
 
     return () => {
@@ -311,6 +327,72 @@ export const MapView: React.FC<MapViewProps> = ({ shifts, onSelectShift, userDoc
     });
 
   }, [filteredShifts, selectedShiftId, userLocation, filters.maxDistance, userDocuments]);
+
+  // Facility pins: every registered hospital site shows up here the moment
+  // it's geocoded, even before it has any shifts posted. Sites that already
+  // have at least one shift pin (handled above) are skipped so a location
+  // doesn't get two overlapping markers.
+  useEffect(() => {
+    if (!mapInstanceRef.current || !facilityMarkersLayerRef.current) return;
+    facilityMarkersLayerRef.current.clearLayers();
+
+    const hospitalIdsWithShifts = new Set(shifts.map((s) => s.hospitalId));
+
+    hospitals
+      .filter((h) => typeof h.lat === 'number' && typeof h.lng === 'number' && !hospitalIdsWithShifts.has(h.id))
+      .forEach((hospital) => {
+        const isConnected = connectedHospitalIds.includes(hospital.id);
+
+        const markerHtml = `
+          <div class="group cursor-pointer transform transition-all duration-200 hover:scale-105">
+            <div class="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl font-bold text-xs shadow-md border bg-white text-slate-800 border-2 border-slate-400 hover:bg-slate-50">
+              <span class="w-2.5 h-2.5 rounded-full shrink-0 bg-slate-500"></span>
+              <div class="flex flex-col leading-tight">
+                <span class="font-extrabold text-[10px] max-w-[110px] truncate">${hospital.name}</span>
+                <span class="text-[9px] font-black text-slate-500 uppercase tracking-tight">Affiliated Site</span>
+              </div>
+            </div>
+            <div class="w-3 h-3 bg-white border-b-2 border-r-2 border-slate-400 rotate-45 -mt-1.5 mx-auto"></div>
+          </div>
+        `;
+
+        const facilityIcon = L.divIcon({
+          html: markerHtml,
+          className: 'custom-map-pin',
+          iconSize: [130, 42],
+          iconAnchor: [65, 42],
+        });
+
+        const marker = L.marker([hospital.lat, hospital.lng], { icon: facilityIcon });
+
+        const popupHtml = `
+          <div style="min-width:180px;font-family:inherit;">
+            <p style="font-weight:800;font-size:12px;margin:0 0 2px;color:#0f172a;">${hospital.name}</p>
+            <p style="font-size:11px;color:#64748b;margin:0 0 8px;">${hospital.address}, ${hospital.city}, ${hospital.state}</p>
+            ${
+              onConnectSite
+                ? isConnected
+                  ? '<p style="font-size:11px;font-weight:700;color:#047857;margin:0;">✓ Connected</p>'
+                  : '<button class="md-express-interest-btn" style="width:100%;padding:6px 10px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;">Express Interest</button>'
+                : ''
+            }
+          </div>
+        `;
+
+        marker.bindPopup(popupHtml);
+        if (onConnectSite && !isConnected) {
+          marker.on('popupopen', (e) => {
+            const el = e.popup.getElement()?.querySelector('.md-express-interest-btn');
+            el?.addEventListener('click', () => {
+              onConnectSite(hospital);
+              marker.closePopup();
+            });
+          });
+        }
+
+        facilityMarkersLayerRef.current?.addLayer(marker);
+      });
+  }, [hospitals, shifts, connectedHospitalIds, onConnectSite]);
 
   return (
     <div className="relative w-full h-[calc(100vh-4rem)] flex flex-col md:flex-row overflow-hidden bg-slate-50 text-slate-900">

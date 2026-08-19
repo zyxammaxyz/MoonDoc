@@ -840,6 +840,9 @@ export default function App() {
             shifts={shifts}
             onSelectShift={(shift) => setSelectedShiftModal(shift)}
             userDocuments={profile.documents}
+            hospitals={hospitals}
+            onConnectSite={handleConnectSite}
+            connectedHospitalIds={applications.map((app) => app.shift?.hospitalId).filter(Boolean) as string[]}
           />
         )}
 
