@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Building2,
   MapPin,
@@ -29,7 +29,7 @@ import {
   X
 } from 'lucide-react';
 import { ResidentProfile, MedicalSpecialty, PGYLevel } from '../types';
-import { SOCAL_RESIDENCY_PROGRAMS } from '../data/mockData';
+import { SOCAL_RESIDENCY_PROGRAMS, INITIAL_RESIDENT } from '../data/mockData';
 import { isSupabaseConfigured } from '../lib/supabaseClient';
 import {
   beginSignUp,
@@ -38,9 +38,18 @@ import {
 } from '../lib/residentApi';
 
 interface LandingPageProps {
-  onLogin: (role?: 'resident' | 'admin', customProfile?: ResidentProfile) => void;
+  onLogin: (role?: 'resident' | 'admin', customProfile?: ResidentProfile, isDemo?: boolean) => void;
   onShowHospitalPortal?: () => void;
 }
+
+// Both demo experiences (Resident + Hospital MSO Admin) are hidden from the
+// public site now that it's live at a real domain. They're only reachable by
+// whoever knows the secret preview link below, or by clicking the footer
+// copyright text 5 times in a row. Change PREVIEW_ACCESS_CODE any time to
+// invalidate old links.
+const PREVIEW_ACCESS_PARAM = 'preview';
+const PREVIEW_ACCESS_CODE = 'mooncall-2026';
+const PREVIEW_UNLOCK_STORAGE_KEY = 'mc_preview_unlocked';
 
 interface CartoonHospital {
   id: string;
@@ -115,7 +124,64 @@ const DEMO_HOSPITALS: CartoonHospital[] = [
 export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospitalPortal }) => {
   const [visibleCount, setVisibleCount] = useState<number>(0);
   const [activeHospital, setActiveHospital] = useState<CartoonHospital | null>(null);
-  
+
+  // Both demo modes (Resident + Hospital MSO Admin) stay hidden from public
+  // visitors until unlocked via the secret preview link or footer tap combo.
+  const [isDemoUnlocked, setIsDemoUnlocked] = useState<boolean>(false);
+  const secretTapCountRef = useRef<number>(0);
+  const secretTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const unlockDemoAccess = () => {
+    setIsDemoUnlocked(true);
+    try {
+      window.localStorage.setItem(PREVIEW_UNLOCK_STORAGE_KEY, '1');
+    } catch {
+      // Storage may be unavailable (e.g. private browsing) — the unlock
+      // still holds for the rest of this page visit either way.
+    }
+  };
+
+  // Secret entry #1: a link containing ?preview=<code>. Checked once on
+  // mount, then immediately scrubbed from the visible URL. Secret entry #2:
+  // tapping the footer copyright line 5 times within ~2.5s of each other.
+  useEffect(() => {
+    let storedUnlocked = false;
+    try {
+      storedUnlocked = window.localStorage.getItem(PREVIEW_UNLOCK_STORAGE_KEY) === '1';
+    } catch {
+      storedUnlocked = false;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const hasSecretLink = params.get(PREVIEW_ACCESS_PARAM) === PREVIEW_ACCESS_CODE;
+
+    if (hasSecretLink || storedUnlocked) {
+      unlockDemoAccess();
+    }
+
+    if (hasSecretLink) {
+      params.delete(PREVIEW_ACCESS_PARAM);
+      const remaining = params.toString();
+      const cleanedUrl = window.location.pathname + (remaining ? `?${remaining}` : '') + window.location.hash;
+      window.history.replaceState({}, '', cleanedUrl);
+    }
+  }, []);
+
+  const handleSecretFooterTap = () => {
+    secretTapCountRef.current += 1;
+    if (secretTapTimerRef.current) {
+      clearTimeout(secretTapTimerRef.current);
+    }
+    if (secretTapCountRef.current >= 5) {
+      secretTapCountRef.current = 0;
+      unlockDemoAccess();
+      return;
+    }
+    secretTapTimerRef.current = setTimeout(() => {
+      secretTapCountRef.current = 0;
+    }, 2500);
+  };
+
   // Login Role Tab: 'resident' | 'admin'
   const [loginRole, setLoginRole] = useState<'resident' | 'admin'>('resident');
 
@@ -337,6 +403,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
     }, 500);
   };
 
+  // Resident-side demo: loads the built-in "Dr. Jessie Smith" mock persona
+  // without touching Supabase — same isolation the admin demo already has.
+  const handleResidentDemoAccess = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      onLogin('resident', INITIAL_RESIDENT, true);
+    }, 500);
+  };
+
   // Scrolls to the sign-in card and pre-selects the resident tab, without
   // faking a login the way the old demo build used to.
   const scrollToResidentSignIn = () => {
@@ -378,14 +454,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
             >
               <User className="w-3.5 h-3.5" />
               <span>Resident Login</span>
-            </button>
-
-            <button
-              onClick={handleAdminDemoAccess}
-              className="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-slate-900 rounded-xl text-xs font-bold flex items-center space-x-1 transition-all shadow-sm"
-            >
-              <Hospital className="w-3.5 h-3.5 text-blue-600" />
-              <span>Hospital MSO Admin (Demo)</span>
             </button>
           </div>
 
@@ -617,34 +685,36 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
             </div>
           )}
           
-          {/* Role Selection Tabs */}
-          <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
-            <button
-              type="button"
-              onClick={() => { setLoginRole('resident'); setIsSignUp(false); }}
-              className={`flex-1 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center space-x-2 ${
-                loginRole === 'resident'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              <User className="w-4 h-4" />
-              <span>Resident Doctor</span>
-            </button>
+          {/* Role Selection Tabs — Hospital MSO Admin only shows once demo access is unlocked */}
+          {isDemoUnlocked && (
+            <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+              <button
+                type="button"
+                onClick={() => { setLoginRole('resident'); setIsSignUp(false); }}
+                className={`flex-1 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center space-x-2 ${
+                  loginRole === 'resident'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <User className="w-4 h-4" />
+                <span>Resident Doctor</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => { setLoginRole('admin'); setIsSignUp(false); }}
-              className={`flex-1 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center space-x-2 ${
-                loginRole === 'admin'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              <Hospital className="w-4 h-4" />
-              <span>Hospital MSO Admin</span>
-            </button>
-          </div>
+              <button
+                type="button"
+                onClick={() => { setLoginRole('admin'); setIsSignUp(false); }}
+                className={`flex-1 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center space-x-2 ${
+                  loginRole === 'admin'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <Hospital className="w-4 h-4" />
+                <span>Hospital MSO Admin</span>
+              </button>
+            </div>
+          )}
 
           {/* Sub-toggle for Residents: Sign In vs Create Account */}
           {loginRole === 'resident' && (
@@ -1127,12 +1197,39 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                   </button>
                 </div>
               ) : (
-                signInError && (
-                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 flex items-center space-x-2 animate-in fade-in duration-200">
-                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
-                    <span className="text-[11px] font-medium leading-snug">{signInError}</span>
-                  </div>
-                )
+                <>
+                  {isDemoUnlocked && (
+                    <div className="bg-gradient-to-r from-sky-50 to-white border border-sky-200 p-4 rounded-2xl space-y-3 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-extrabold text-sky-700 flex items-center space-x-1.5 uppercase tracking-wider">
+                          <Key className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Resident Demo Access</span>
+                        </span>
+                        <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-50 text-amber-700 rounded border border-amber-300">
+                          Demo Only
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-relaxed">
+                        Loads a pre-filled sample resident (Dr. Jessie Smith) with a completed passport, so you can preview the resident side without a real account.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleResidentDemoAccess}
+                        className="w-full py-2.5 px-4 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white rounded-xl text-xs font-extrabold flex items-center justify-center space-x-2 shadow-lg shadow-sky-600/30 transition-all cursor-pointer"
+                      >
+                        <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
+                        <span>⚡ One-Click Access as Demo Resident</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {signInError && (
+                    <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 flex items-center space-x-2 animate-in fade-in duration-200">
+                      <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+                      <span className="text-[11px] font-medium leading-snug">{signInError}</span>
+                    </div>
+                  )}
+                </>
               )}
 
               {/* Form */}
@@ -1216,7 +1313,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
 
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500 space-y-1">
-        <p>© 2026 MoonCall Health Technologies Inc. • Medical Resident Moonlighting Platform</p>
+        <p onClick={handleSecretFooterTap} className="select-none">
+          © 2026 MoonCall Health Technologies Inc. • Medical Resident Moonlighting Platform
+        </p>
         <p className="text-[11px] text-slate-500">All hospital names and hourly rates shown for illustrative demo preview.</p>
       </footer>
 

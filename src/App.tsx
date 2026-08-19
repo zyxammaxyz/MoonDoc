@@ -788,8 +788,11 @@ export default function App() {
     return (
       <LandingPage
         onShowHospitalPortal={() => setShowHospitalPortal(true)}
-        onLogin={async (role, customProfile) => {
+        onLogin={async (role, customProfile, isDemo) => {
           if (role === 'admin') {
+            // Hospital MSO Admin is entirely a local mock demo — no Supabase
+            // session, no real data touched. Only reachable now via the
+            // secret preview unlock on the landing page.
             setIsLoggedIn(true);
             setUserRole('admin');
             setActiveTab('map');
@@ -803,7 +806,10 @@ export default function App() {
             setProfile(customProfile);
             setApplications([]);
             setResidentNotifications([]);
-            if (isSupabaseConfigured) {
+            // Demo resident logins (secret preview unlock) stay fully on the
+            // built-in mock shifts/hospitals already in state — never touch
+            // the real database, same isolation the admin demo already has.
+            if (isSupabaseConfigured && !isDemo) {
               try {
                 const [sharedShifts, sharedHospitals] = await Promise.all([fetchShifts(), fetchHospitals()]);
                 if (sharedShifts.length) setShifts(sharedShifts);
