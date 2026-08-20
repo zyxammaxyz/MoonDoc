@@ -480,9 +480,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
             />
           </div>
 
-          {/* Key Value Proposition Feature Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-left pt-2">
-            
+        </div>
+
+        {/* Section 1.4: Key Value Proposition Feature Cards — pulled into its
+            own card (separate border/shadow, plus the space-y-12 gap on
+            <main>) so it reads as a distinct section rather than an
+            afterthought stapled to the bottom of the map preview. */}
+        <div className="bg-white border border-slate-200 rounded-3xl p-4 sm:p-6 shadow-xl">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-left">
+
             {/* Feature 1: Fast-Track Clearance */}
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5 hover:border-blue-300 transition-all group">
               <div className="flex items-center space-x-2">
@@ -536,7 +542,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
             </div>
 
           </div>
-
         </div>
 
         {/* Section 1.5: Early Access CTA — entices sign-ups now, before many
