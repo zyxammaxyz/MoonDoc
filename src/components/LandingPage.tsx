@@ -33,6 +33,7 @@ import {
   Radar,
   Users,
   FileCheck,
+  Info,
 } from 'lucide-react';
 import { ResidentProfile, MedicalSpecialty, PGYLevel } from '../types';
 import { SOCAL_RESIDENCY_PROGRAMS, INITIAL_RESIDENT, LANDING_PREVIEW_HOSPITALS, LANDING_PREVIEW_SHIFTS } from '../data/mockData';
@@ -1374,7 +1375,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500 space-y-1">
+      <footer className="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500 space-y-3">
+        {/* Info links -- About Us is a placeholder until that page actually
+            gets built, so it's intentionally unclickable with a "Coming
+            Soon" tag instead of linking anywhere. */}
+        <div className="flex flex-col items-center gap-1.5">
+          <span className="flex items-center gap-1.5 text-slate-400 font-semibold cursor-not-allowed select-none">
+            <Info className="w-3.5 h-3.5" />
+            <span>About Us</span>
+            <span className="px-1.5 py-0.5 text-[9px] font-bold bg-slate-200 text-slate-500 rounded-full">
+              Coming Soon
+            </span>
+          </span>
+          <a
+            href="https://mooncallhealth.org"
+            target="_blank"
+            rel="noreferrer"
+            className="text-slate-500 hover:text-blue-600 hover:underline transition-colors"
+          >
+            mooncallhealth.org
+          </a>
+        </div>
+
         <p onClick={handleSecretFooterTap} className="select-none">
           © 2026 MoonCall Health Technologies Inc. • Medical Resident Moonlighting Platform
         </p>
