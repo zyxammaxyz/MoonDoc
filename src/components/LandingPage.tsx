@@ -29,6 +29,10 @@ import {
   MessageSquare,
   Briefcase,
   FlaskConical,
+  ClipboardList,
+  Radar,
+  Users,
+  FileCheck,
 } from 'lucide-react';
 import { ResidentProfile, MedicalSpecialty, PGYLevel } from '../types';
 import { SOCAL_RESIDENCY_PROGRAMS, INITIAL_RESIDENT, LANDING_PREVIEW_HOSPITALS, LANDING_PREVIEW_SHIFTS } from '../data/mockData';
@@ -54,9 +58,11 @@ interface LandingPageProps {
 const PREVIEW_ACCESS_PARAM = 'preview';
 const PREVIEW_ACCESS_CODE = 'mooncall-2026';
 
-// "How MoonCall Works" stepper content for the Resident audience. The
-// Hospital System side of this section is coming next — see the disabled
-// "For Hospital Systems" pill next to the section heading below.
+// "How MoonCall Works" stepper content — one breakdown for the Resident
+// audience, one for the Institution (hospital system / urgent care / other
+// site) audience. Toggled via the "For Residents" / "For Institutions"
+// pills next to the section heading below, and reachable directly from the
+// matching buttons in the top nav.
 interface HowItWorksStep {
   title: string;
   description: string;
@@ -98,6 +104,57 @@ const RESIDENT_HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
     title: 'Shifts, Payment & Hours — Tracked Automatically',
     description:
       'MoonCall tracks every shift you take, verifies completion on both your end and the hospital’s, calculates your payment from the posted rate, and keeps a running total of your moonlighting hours.',
+    icon: Clock,
+  },
+];
+
+const INSTITUTION_HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
+  {
+    title: 'Create Your Institution Account',
+    description:
+      'Sign up as a hospital, health system, urgent care, or other site to activate your MoonCall account and start posting real moonlighting opportunities to residents across SoCal.',
+    icon: UserPlus,
+  },
+  {
+    title: 'Get Verified',
+    description:
+      "MoonCall verifies every institution before its listings go live, so residents only ever see real, vetted sites on their Opportunity Map.",
+    icon: ShieldCheck,
+  },
+  {
+    title: 'Post a Job With Full Details',
+    description:
+      'Create a shift listing with specialty, PGY requirements, pay rate, dates and times, department, and any other descriptors residents need to decide whether to apply.',
+    icon: ClipboardList,
+  },
+  {
+    title: "It Populates on the Resident's Map Radar Instantly",
+    description:
+      "The moment you publish, the shift appears live on every nearby resident's Opportunity Map — no separate job board, no waiting.",
+    icon: Radar,
+  },
+  {
+    title: 'Interested Residents Connect & Share Their Passport',
+    description:
+      'Residents who want the shift reach out and establish a connection with your site, sharing their MoonCall Passport — license, DEA, board certs, and more — right away.',
+    icon: Users,
+  },
+  {
+    title: 'Request Anything Extra, In-Thread',
+    description:
+      'Need something beyond the standard passport? Ask for it directly in the chat, and the resident uploads it straight to that same thread instead of a separate email chain.',
+    icon: MessageSquare,
+  },
+  {
+    title: 'Manually Clear Each Candidate',
+    description:
+      "Once every required document is in and checks out, mark the resident cleared to start working — your call, on your timeline.",
+    icon: FileCheck,
+  },
+  {
+    title: 'Track Every Shift Automatically',
+    description:
+      'MoonCall keeps a running record of who worked what shift and when, so your site always knows its moonlighting coverage at a glance — no separate spreadsheet needed.',
     icon: Clock,
   },
 ];
@@ -149,6 +206,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
 
   // Login Role Tab: 'resident' | 'admin'
   const [loginRole, setLoginRole] = useState<'resident' | 'admin'>('resident');
+
+  // Which audience's breakdown is showing in the "How MoonCall Works"
+  // section further down the page.
+  const [howItWorksAudience, setHowItWorksAudience] = useState<'resident' | 'institution'>('resident');
 
   // Auth Form State
   const [email, setEmail] = useState('');
@@ -377,6 +438,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
     document.getElementById('auth-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
+  // Jumps straight to the "How MoonCall Works" breakdown and pre-selects
+  // the matching audience tab — used by the "For Residents" / "For
+  // Institutions" buttons in the top nav.
+  const scrollToHowItWorks = (audience: 'resident' | 'institution') => {
+    setHowItWorksAudience(audience);
+    document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans relative overflow-x-hidden selection:bg-blue-600 selection:text-white">
       
@@ -403,7 +472,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 sm:space-x-2">
+            <button
+              onClick={() => scrollToHowItWorks('resident')}
+              className="px-2.5 sm:px-3 py-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all"
+            >
+              <User className="w-3.5 h-3.5 text-blue-600" />
+              <span className="hidden sm:inline">For Residents</span>
+            </button>
+
+            <button
+              onClick={() => scrollToHowItWorks('institution')}
+              className="px-2.5 sm:px-3 py-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all"
+            >
+              <Hospital className="w-3.5 h-3.5 text-indigo-600" />
+              <span className="hidden sm:inline">For Institutions</span>
+            </button>
+
             <button
               onClick={scrollToResidentSignIn}
               className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-600/20 flex items-center space-x-1 transition-all"
@@ -582,7 +667,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
         </div>
 
         {/* Section 1.75: How MoonCall Works — Stepper */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xl space-y-8">
+        <div id="how-it-works" className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xl space-y-8">
 
           <div className="text-center max-w-2xl mx-auto space-y-3">
             <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
@@ -590,32 +675,47 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
               <span>How MoonCall Works</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              From Sign-Up to Paycheck
+              {howItWorksAudience === 'resident' ? 'From Sign-Up to Paycheck' : 'From Sign-Up to Shift Coverage'}
             </h2>
             <p className="text-sm text-slate-600 leading-relaxed">
-              Here's exactly how a resident moves through MoonCall — from creating an account to getting paid for a completed shift.
+              {howItWorksAudience === 'resident'
+                ? "Here's exactly how a resident moves through MoonCall — from creating an account to getting paid for a completed shift."
+                : "Here's exactly how an institution moves through MoonCall — from creating an account to tracking a completed shift."}
             </p>
 
             {/* Audience Pills */}
             <div className="inline-flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
-              <div className="px-4 py-2 rounded-xl text-xs font-extrabold flex items-center space-x-2 bg-blue-600 text-white shadow-md">
+              <button
+                type="button"
+                onClick={() => setHowItWorksAudience('resident')}
+                className={`px-4 py-2 rounded-xl text-xs font-extrabold flex items-center space-x-2 transition-all cursor-pointer ${
+                  howItWorksAudience === 'resident'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
                 <User className="w-4 h-4" />
                 <span>For Residents</span>
-              </div>
-              <div className="px-4 py-2 rounded-xl text-xs font-extrabold flex items-center space-x-2 text-slate-400 cursor-not-allowed">
+              </button>
+              <button
+                type="button"
+                onClick={() => setHowItWorksAudience('institution')}
+                className={`px-4 py-2 rounded-xl text-xs font-extrabold flex items-center space-x-2 transition-all cursor-pointer ${
+                  howItWorksAudience === 'institution'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
                 <Hospital className="w-4 h-4" />
-                <span>For Hospital Systems</span>
-                <span className="ml-1 px-1.5 py-0.5 text-[9px] font-bold bg-slate-200 text-slate-500 rounded-full">
-                  Coming Soon
-                </span>
-              </div>
+                <span>For Institutions</span>
+              </button>
             </div>
           </div>
 
           {/* Vertical Step Timeline */}
           <div className="relative max-w-2xl mx-auto">
             <div className="absolute left-[19px] top-2 bottom-2 w-0.5 bg-blue-100" />
-            {RESIDENT_HOW_IT_WORKS_STEPS.map((step, index) => {
+            {(howItWorksAudience === 'resident' ? RESIDENT_HOW_IT_WORKS_STEPS : INSTITUTION_HOW_IT_WORKS_STEPS).map((step, index) => {
               const StepIcon = step.icon;
               return (
                 <div key={step.title} className="relative flex items-start space-x-4 pb-8 last:pb-0">
