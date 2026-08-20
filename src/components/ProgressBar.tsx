@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { CredentialDocument, MoonlightingShift } from '../types';
-import { ShieldAlert, CheckCircle2, AlertCircle, ChevronUp, ChevronDown, ArrowRight, FilePlus, Share2, Sparkles } from 'lucide-react';
+import { ShieldAlert, CheckCircle2, AlertCircle, ChevronUp, ChevronDown, ArrowRight, FilePlus, Sparkles } from 'lucide-react';
 
 interface ProgressBarProps {
   documents: CredentialDocument[];
   completionPercentage: number;
   onOpenVault: () => void;
-  onOpenShareModal: () => void;
   availableShifts: MoonlightingShift[];
 }
 
@@ -14,7 +13,6 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   documents,
   completionPercentage,
   onOpenVault,
-  onOpenShareModal,
   availableShifts,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -114,14 +112,6 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
 
             <div className="flex items-center justify-end space-x-3 mt-4 pt-3 border-t border-slate-100">
               <button
-                onClick={onOpenShareModal}
-                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center space-x-1.5 transition-colors border border-slate-200"
-              >
-                <Share2 className="w-3.5 h-3.5 text-blue-600" />
-                <span>Export MoonCall Passport</span>
-              </button>
-
-              <button
                 onClick={onOpenVault}
                 className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm flex items-center space-x-1.5 transition-colors"
               >
@@ -186,14 +176,6 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
 
           {/* Right: Action Buttons */}
           <div className="flex items-center space-x-2 w-full md:w-auto justify-end">
-            <button
-              onClick={onOpenShareModal}
-              className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 flex items-center space-x-1.5 transition-colors cursor-pointer"
-            >
-              <Share2 className="w-3.5 h-3.5 text-blue-600" />
-              <span className="hidden sm:inline">Share Passport</span>
-            </button>
-
             <button
               onClick={onOpenVault}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center space-x-1.5 transition-all cursor-pointer"

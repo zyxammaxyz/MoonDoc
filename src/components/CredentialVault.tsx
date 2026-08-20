@@ -18,7 +18,6 @@ import {
   FileCheck,
   Eye,
   Trash2,
-  Share2,
   Plus,
   Calendar,
   Award,
@@ -35,14 +34,12 @@ interface CredentialVaultProps {
   profile: ResidentProfile;
   onUpdateProfile: (updatedProfile: ResidentProfile) => void;
   onOpenDocumentViewer: (doc: CredentialDocument) => void;
-  onOpenShareModal: () => void;
 }
 
 export const CredentialVault: React.FC<CredentialVaultProps> = ({
   profile,
   onUpdateProfile,
   onOpenDocumentViewer,
-  onOpenShareModal,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -403,14 +400,6 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
             >
               <User className="w-4 h-4 text-blue-600" />
               <span>Edit Profile & Credentials</span>
-            </button>
-
-            <button
-              onClick={onOpenShareModal}
-              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition-all flex items-center space-x-2"
-            >
-              <Share2 className="w-4 h-4" />
-              <span>Share MoonCall Passport</span>
             </button>
           </div>
 

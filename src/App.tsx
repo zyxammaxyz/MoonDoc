@@ -7,7 +7,6 @@ import { MapView } from './components/MapView';
 import { CredentialVault } from './components/CredentialVault';
 import { ShiftDetailModal } from './components/ShiftDetailModal';
 import { MyApplications } from './components/MyApplications';
-import { HospitalSharePreview } from './components/HospitalSharePreview';
 import { DocumentViewerModal } from './components/DocumentViewerModal';
 import { FinancesDashboard } from './components/FinancesDashboard';
 import { HoursDashboard } from './components/HoursDashboard';
@@ -80,7 +79,7 @@ const INITIAL_RESIDENT_NOTIFICATIONS: ResidentNotification[] = [
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [userRole, setUserRole] = useState<'resident' | 'admin'>('resident');
-  const [activeTab, setActiveTab] = useState<'map' | 'vault' | 'applications' | 'communications' | 'finances' | 'hours' | 'affiliated_sites' | 'hospital_preview'>('map');
+  const [activeTab, setActiveTab] = useState<'map' | 'vault' | 'applications' | 'communications' | 'finances' | 'hours' | 'affiliated_sites'>('map');
   const [profile, setProfile] = useState<ResidentProfile>(INITIAL_RESIDENT);
   const [shifts, setShifts] = useState<MoonlightingShift[]>(MOCK_SHIFTS);
   const [hospitals, setHospitals] = useState<HospitalFacility[]>(MOCK_HOSPITALS);
@@ -221,7 +220,6 @@ export default function App() {
   // Modal states
   const [selectedShiftModal, setSelectedShiftModal] = useState<MoonlightingShift | null>(null);
   const [selectedDocViewer, setSelectedDocViewer] = useState<CredentialDocument | null>(null);
-  const [showShareModal, setShowShareModal] = useState<boolean>(false);
 
   // Calculate percentage
   const totalDocs = profile.documents.length;
@@ -922,14 +920,12 @@ export default function App() {
             profile={profile}
             onUpdateProfile={handleUpdateProfile}
             onOpenDocumentViewer={(doc) => setSelectedDocViewer(doc)}
-            onOpenShareModal={() => setShowShareModal(true)}
           />
         )}
 
         {activeTab === 'applications' && (
           <MyApplications
             applications={applications}
-            onOpenHospitalPreview={() => setShowShareModal(true)}
             onSendMessage={handleSendMessage}
             onMarkShiftCompleted={handleMarkShiftCompleted}
           />
@@ -972,17 +968,6 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'hospital_preview' && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-32">
-            <HospitalSharePreview
-              profile={profile}
-              onClose={() => setActiveTab('map')}
-              isModal={false}
-              applications={applications}
-              onSendMessage={handleSendMessage}
-            />
-          </div>
-        )}
       </main>
 
       {/* Floating Bottom Credential Progress Bar */}
@@ -990,7 +975,6 @@ export default function App() {
         documents={profile.documents}
         completionPercentage={completionPercentage}
         onOpenVault={() => setActiveTab('vault')}
-        onOpenShareModal={() => setShowShareModal(true)}
         availableShifts={shifts}
       />
 
@@ -1010,15 +994,6 @@ export default function App() {
         <DocumentViewerModal
           document={selectedDocViewer}
           onClose={() => setSelectedDocViewer(null)}
-        />
-      )}
-
-      {showShareModal && (
-        <HospitalSharePreview
-          profile={profile}
-          onClose={() => setShowShareModal(false)}
-          applications={applications}
-          onSendMessage={handleSendMessage}
         />
       )}
 

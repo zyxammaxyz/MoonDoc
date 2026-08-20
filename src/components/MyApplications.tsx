@@ -24,7 +24,6 @@ import {
 
 interface MyApplicationsProps {
   applications: Application[];
-  onOpenHospitalPreview?: () => void;
   onSendMessage: (
     appId: string,
     text: string,
@@ -56,7 +55,6 @@ function formatWrittenDate(dateStr: string): string {
 
 export const MyApplications: React.FC<MyApplicationsProps> = ({
   applications,
-  onOpenHospitalPreview,
   onSendMessage,
   onMarkShiftCompleted,
 }) => {

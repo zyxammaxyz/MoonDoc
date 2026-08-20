@@ -3,8 +3,8 @@ import { ResidentProfile, ResidentNotification } from '../types';
 import { MapPin, ShieldCheck, FileCheck, DollarSign, Clock, Building2, LogOut, Hospital, Bell, Sparkles, CheckCircle2, MessageSquare, X } from 'lucide-react';
 
 interface HeaderProps {
-  activeTab: 'map' | 'vault' | 'applications' | 'communications' | 'finances' | 'hours' | 'affiliated_sites' | 'hospital_preview';
-  setActiveTab: (tab: 'map' | 'vault' | 'applications' | 'communications' | 'finances' | 'hours' | 'affiliated_sites' | 'hospital_preview') => void;
+  activeTab: 'map' | 'vault' | 'applications' | 'communications' | 'finances' | 'hours' | 'affiliated_sites';
+  setActiveTab: (tab: 'map' | 'vault' | 'applications' | 'communications' | 'finances' | 'hours' | 'affiliated_sites') => void;
   profile: ResidentProfile;
   completionPercentage: number;
   appliedCount: number;
@@ -100,18 +100,6 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 {completionPercentage}%
               </span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('hospital_preview')}
-              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 shrink-0 whitespace-nowrap ${
-                activeTab === 'hospital_preview'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
-              }`}
-            >
-              <Building2 className={`w-4 h-4 ${activeTab === 'hospital_preview' ? 'text-white' : 'text-sky-400'}`} />
-              <span>Passport</span>
             </button>
 
             <button
@@ -346,15 +334,6 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <ShieldCheck className={`w-3.5 h-3.5 ${activeTab === 'vault' ? 'text-white' : 'text-emerald-500'}`} />
             <span>Vault ({completionPercentage}%)</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('hospital_preview')}
-            className={`flex items-center space-x-1 px-2 py-1.5 rounded-lg font-medium whitespace-nowrap ${
-              activeTab === 'hospital_preview' ? 'bg-blue-600 text-white' : 'text-slate-600'
-            }`}
-          >
-            <Building2 className={`w-3.5 h-3.5 ${activeTab === 'hospital_preview' ? 'text-white' : 'text-sky-400'}`} />
-            <span>Passport</span>
           </button>
           <button
             onClick={() => setActiveTab('applications')}
