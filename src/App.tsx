@@ -110,6 +110,15 @@ export default function App() {
     isLoggedInRef.current = isLoggedIn;
   }, [isLoggedIn]);
 
+  // Same pattern for showHospitalPortal -- needed by the tab-refocus session
+  // recheck below (see the "email confirmed in another tab" effect further
+  // down), so it can tell whether a hospital admin session was already
+  // picked up without needing to recreate that listener on every render.
+  const showHospitalPortalRef = useRef(showHospitalPortal);
+  useEffect(() => {
+    showHospitalPortalRef.current = showHospitalPortal;
+  }, [showHospitalPortal]);
+
   // Same pattern, for the real-hospital-chat poller below so it always sees
   // the latest applications list without needing to recreate its interval.
   const applicationsRef = useRef(applications);
@@ -213,6 +222,50 @@ export default function App() {
     return () => {
       mounted = false;
       subscription.subscription.unsubscribe();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Confirmation emails almost always get clicked from a NEW browser tab
+  // (email clients open links that way), not the original tab where someone
+  // filled out the sign-up form. That original tab is left sitting on the
+  // "check your email" screen with no new URL for detectSessionInUrl to
+  // find, so onAuthStateChange above never fires there on its own -- it's
+  // still waiting for the person to switch back. Re-checking the session
+  // whenever this tab regains focus/visibility picks that up immediately
+  // instead of requiring a manual refresh.
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+
+    let checking = false;
+    const recheckSessionOnRefocus = async () => {
+      if (checking || isLoggedInRef.current || showHospitalPortalRef.current) return;
+      checking = true;
+      try {
+        const existingSession = await getCurrentSession();
+        if (existingSession?.user) {
+          if (isHospitalAdminSession(existingSession)) {
+            setShowHospitalPortal(true);
+          } else {
+            await loadResidentSession(existingSession.user.id);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to re-check session on tab refocus', err);
+      } finally {
+        checking = false;
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') recheckSessionOnRefocus();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', recheckSessionOnRefocus);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', recheckSessionOnRefocus);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
