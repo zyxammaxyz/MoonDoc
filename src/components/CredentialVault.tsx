@@ -370,16 +370,34 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
             </div>
           </div>
 
-          {/* Centered Verified Resident Passport Box */}
-          <div className="flex flex-col items-center justify-center p-3 px-4 bg-emerald-50 border border-emerald-300 rounded-2xl shadow-2xs text-center shrink-0 my-2 lg:my-0">
-            <div className="flex items-center space-x-1.5 text-emerald-900 font-extrabold text-xs">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>Verified Resident Passport</span>
+          {/* Centered Passport Status Box -- only claims "Verified" once every
+              document in the vault below has actually been uploaded and
+              marked verified (100%). This is purely the resident's own
+              Credential Vault completeness; it has nothing to do with a
+              hospital site marking them cleared/verified on their end (see
+              HospitalPortal's separate "Mark as Verified" per-candidate
+              flow), so it must never appear before 100% here. */}
+          {completionPercent === 100 ? (
+            <div className="flex flex-col items-center justify-center p-3 px-4 bg-emerald-50 border border-emerald-300 rounded-2xl shadow-2xs text-center shrink-0 my-2 lg:my-0">
+              <div className="flex items-center space-x-1.5 text-emerald-900 font-extrabold text-xs">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Verified Resident Passport</span>
+              </div>
+              <span className="text-[10px] text-emerald-700 font-bold mt-0.5">
+                All Vault Documents Verified • 100% Readiness
+              </span>
             </div>
-            <span className="text-[10px] text-emerald-700 font-bold mt-0.5">
-              NPI & State Board Cleared • {completionPercent}% Readiness
-            </span>
-          </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center p-3 px-4 bg-amber-50 border border-amber-300 rounded-2xl shadow-2xs text-center shrink-0 my-2 lg:my-0">
+              <div className="flex items-center space-x-1.5 text-amber-900 font-extrabold text-xs">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>Passport Not Yet Verified</span>
+              </div>
+              <span className="text-[10px] text-amber-700 font-bold mt-0.5">
+                Upload & verify documents below • {completionPercent}% Readiness
+              </span>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center gap-3">
