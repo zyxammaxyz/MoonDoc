@@ -232,6 +232,7 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
       }, 6000);
     } catch (err) {
       console.error('Failed to upload custom document', err);
+      alert(err instanceof Error ? err.message : 'Failed to upload this document. Please try again.');
     } finally {
       setIsSubmittingCustom(false);
     }
@@ -298,6 +299,9 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
       }
     } catch (err) {
       console.error('Failed to upload headshot', err);
+      alert(err instanceof Error ? err.message : 'Failed to upload this photo. Please try again.');
+      // Roll back the instant local preview since the real upload didn't happen.
+      setFormProfile((prev) => ({ ...prev, headshotUrl: profile.headshotUrl }));
     } finally {
       setIsUploadingHeadshot(false);
     }
@@ -347,6 +351,7 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
       setUploadedFileObj(null);
     } catch (err) {
       console.error('Failed to upload document', err);
+      alert(err instanceof Error ? err.message : 'Failed to upload this document. Please try again.');
     } finally {
       setIsUploading(false);
     }
@@ -818,6 +823,7 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
                 </p>
                 <input
                   type="file"
+                  accept=".pdf,.png,.jpg,.jpeg,.docx"
                   onChange={(e) => {
                     const f = e.target.files?.[0];
                     if (f) {
@@ -1056,6 +1062,7 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
               <input
                 type="file"
                 id="custom-doc-file-input"
+                accept=".pdf,.png,.jpg,.jpeg,.docx"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) {

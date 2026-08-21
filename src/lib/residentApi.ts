@@ -348,7 +348,32 @@ export async function verifyNpi(): Promise<NpiVerificationResult> {
   return data;
 }
 
+// Client-side gate before anything reaches storage. This is a data-hygiene
+// check, not a security boundary on its own (nothing stops someone from
+// renaming a file's extension) -- the real protection is that the
+// credential-documents bucket is private and only readable by the owning
+// resident and a connected hospital (see supabase/schema.sql). This just
+// keeps obviously-wrong files (a .exe, a 200MB video) out of the
+// credentialing pipeline before they're stored at all.
+function assertFileAllowed(file: File, allowedExtensions: string[], maxBytes: number, kindLabel: string) {
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  if (!allowedExtensions.includes(ext)) {
+    throw new Error(
+      `"${file.name}" isn't a supported file type for ${kindLabel}. Allowed: ${allowedExtensions.join(', ').toUpperCase()}.`
+    );
+  }
+  if (file.size > maxBytes) {
+    throw new Error(
+      `"${file.name}" is ${(file.size / (1024 * 1024)).toFixed(1)}MB, which is over the ${(maxBytes / (1024 * 1024)).toFixed(0)}MB limit for ${kindLabel}.`
+    );
+  }
+}
+
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024; // 10MB
+const MAX_DOCUMENT_BYTES = 15 * 1024 * 1024; // 15MB -- matches the limit already advertised in the Credential Vault upload UI
+
 export async function uploadHeadshot(userId: string, file: File): Promise<string> {
+  assertFileAllowed(file, ['jpg', 'jpeg', 'png', 'webp', 'gif'], MAX_PHOTO_BYTES, 'a profile photo');
   const ext = file.name.split('.').pop() || 'jpg';
   const path = `${userId}/headshot_${Date.now()}.${ext}`;
   const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
@@ -358,6 +383,7 @@ export async function uploadHeadshot(userId: string, file: File): Promise<string
 }
 
 export async function uploadCredentialDocumentFile(userId: string, docId: string, file: File): Promise<string> {
+  assertFileAllowed(file, ['pdf', 'png', 'jpg', 'jpeg', 'docx'], MAX_DOCUMENT_BYTES, 'a credential document');
   const ext = file.name.split('.').pop() || 'pdf';
   const path = `${userId}/${docId}_${Date.now()}.${ext}`;
   const { error } = await supabase.storage.from('credential-documents').upload(path, file, { upsert: true });

@@ -241,8 +241,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
 
   // Real auth error/loading state
   const [signInError, setSignInError] = useState<string>('');
+  const [signUpStep1Error, setSignUpStep1Error] = useState<string>('');
   const [signUpStep2Error, setSignUpStep2Error] = useState<string>('');
   const [isSigningUp, setIsSigningUp] = useState<boolean>(false);
+
+  // Accounts here hold real medical licensing/DEA/NPI data, so this is
+  // enforced for real rather than left as just a placeholder hint -- Supabase
+  // Auth's own server-side default minimum is only 6 characters, which is too
+  // weak for what's being protected.
+  const MIN_PASSWORD_LENGTH = 8;
 
   // Drag and drop handlers for profile picture upload
   const handlePictureDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -866,7 +873,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
 
               {signUpStep === 1 ? (
                 /* Step 1: Username / Email & Password */
-                <form onSubmit={(e) => { e.preventDefault(); if (signUpEmail && signUpPassword) setSignUpStep(2); }} className="space-y-4 text-xs">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!signUpEmail || !signUpPassword) return;
+                    if (signUpPassword.length < MIN_PASSWORD_LENGTH) {
+                      setSignUpStep1Error(`Password must be at least ${MIN_PASSWORD_LENGTH} characters -- this account will hold real licensing, DEA, and NPI documents.`);
+                      return;
+                    }
+                    setSignUpStep1Error('');
+                    setSignUpStep(2);
+                  }}
+                  className="space-y-4 text-xs"
+                >
                   <div className="space-y-1">
                     <label className="text-slate-700 font-bold block">
                       Username / Email Address *
@@ -889,9 +908,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                       <input
                         type={showPassword ? 'text' : 'password'}
                         required
+                        minLength={MIN_PASSWORD_LENGTH}
                         placeholder="At least 8 characters"
                         value={signUpPassword}
-                        onChange={(e) => setSignUpPassword(e.target.value)}
+                        onChange={(e) => {
+                          setSignUpPassword(e.target.value);
+                          if (signUpStep1Error) setSignUpStep1Error('');
+                        }}
                         className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 pr-10"
                       />
                       <button
@@ -903,6 +926,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                       </button>
                     </div>
                   </div>
+
+                  {signUpStep1Error && (
+                    <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 flex items-center space-x-2 animate-in fade-in duration-200">
+                      <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+                      <span className="text-[11px] font-medium leading-snug">{signUpStep1Error}</span>
+                    </div>
+                  )}
 
                   <button
                     type="submit"
