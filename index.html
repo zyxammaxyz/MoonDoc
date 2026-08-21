@@ -4,6 +4,29 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MoonCall | Physician Moonlighting & Credential Vault</title>
+
+    <!-- Core SEO -->
+    <meta name="description" content="MoonCall connects verified resident physicians with real moonlighting shifts across Southern California urgent cares and hospitals — one credential vault, automated NPI verification, and transparent pay and malpractice coverage on every posting." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://mooncall.org/" />
+
+    <!-- Open Graph / Facebook, LinkedIn, GroupMe, Slack, etc. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="MoonCall" />
+    <meta property="og:url" content="https://mooncall.org/" />
+    <meta property="og:title" content="MoonCall | Physician Moonlighting & Credential Vault" />
+    <meta property="og:description" content="Verified moonlighting shifts for resident physicians in Southern California — one credential vault, automated NPI verification, and transparent pay and malpractice coverage on every posting." />
+    <meta property="og:image" content="https://mooncall.org/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter / X Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="MoonCall | Physician Moonlighting & Credential Vault" />
+    <meta name="twitter:description" content="Verified moonlighting shifts for resident physicians in Southern California — one credential vault, automated NPI verification, and transparent pay and malpractice coverage on every posting." />
+    <meta name="twitter:image" content="https://mooncall.org/og-image.png" />
+
     <link rel="icon" type="image/png" href="/favicon-32.png" />
     <link rel="apple-touch-icon" href="/logo-180.png" />
     <!-- Leaflet CSS -->
@@ -12,6 +35,25 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Structured data: tells Google exactly what MoonCall is, independent
+         of the JS-rendered page content. Safe to keep even after real
+         routing / per-page schema (e.g. JobPosting on shift pages) is
+         added later -- this Organization block doesn't conflict with it. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "MoonCall",
+        "url": "https://mooncall.org/",
+        "logo": "https://mooncall.org/brand/logo.png",
+        "description": "MoonCall connects verified resident physicians with real moonlighting shifts across Southern California urgent cares and hospitals, with a shared credential vault, automated NPI verification, and transparent pay and malpractice coverage on every posting.",
+        "areaServed": {
+          "@type": "State",
+          "name": "California"
+        }
+      }
+    </script>
   </head>
   <body class="bg-slate-50 text-slate-900 font-sans antialiased selection:bg-blue-600 selection:text-white">
     <div id="root"></div>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  MoonCall currently ships as a single-page app with one real URL --
+  every section (how it works, sign up, the Moonlighting Logistics tab,
+  etc.) lives at "/" and is shown/hidden by client-side state rather than
+  routed to its own address. That means this sitemap can only honestly
+  list the one crawlable URL for now.
+
+  When individual job listings and/or the Moonlighting Logistics topics
+  get their own real routes (see the SEO discussion on adding a router),
+  add a <url> entry here for each new page so Google can discover it.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://mooncall.org/</loc>
+    <lastmod>2026-08-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>
