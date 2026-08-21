@@ -862,6 +862,15 @@ export function HospitalAdminPortal({
                             <span>{resident.residencyProgram}</span>
                             <span>•</span>
                             <span className="text-slate-500 font-mono">NPI: {resident.npiNumber}</span>
+                            {resident.npiVerificationStatus === 'verified' ? (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold">
+                                <ShieldCheck className="w-3 h-3" /> CMS Verified
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 border border-slate-200 text-[10px] font-bold">
+                                <AlertTriangle className="w-3 h-3" /> NPI Not Verified
+                              </span>
+                            )}
                           </div>
 
                           <div className="mt-3 p-3 bg-slate-50 rounded-2xl border border-slate-200/80 inline-flex flex-wrap items-center gap-4 text-xs">
@@ -1162,6 +1171,11 @@ export function HospitalAdminPortal({
 
                           <p className="text-xs text-slate-500 mt-1 flex items-center space-x-3">
                             <span>NPI: <strong className="text-slate-700 font-mono">{resident.npiNumber}</strong></span>
+                            {resident.npiVerificationStatus === 'verified' && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold">
+                                <ShieldCheck className="w-3 h-3" /> CMS Verified
+                              </span>
+                            )}
                             <span>•</span>
                             <span>CA License: <strong className="text-slate-700 font-mono">{resident.stateLicenseNumber}</strong></span>
                           </p>

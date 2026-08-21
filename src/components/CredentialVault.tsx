@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ResidentProfile, CredentialDocument, DocumentCategory, PGYLevel, MedicalSpecialty } from '../types';
 import { SOCAL_RESIDENCY_PROGRAMS } from '../data/mockData';
 import { isSupabaseConfigured } from '../lib/supabaseClient';
-import { uploadHeadshot, uploadCredentialDocumentFile } from '../lib/residentApi';
+import { uploadHeadshot, uploadCredentialDocumentFile, verifyNpi } from '../lib/residentApi';
 import {
   ShieldCheck,
   UploadCloud,
@@ -27,8 +27,39 @@ import {
   Link2,
   Copy,
   Check,
-  ExternalLink
+  ExternalLink,
+  Loader2,
+  ShieldAlert,
+  ShieldX
 } from 'lucide-react';
+
+// Small badge summarizing the automated CMS NPI Registry lookup result.
+// This is intentionally separate from (and visually distinct from) the
+// "Verified Resident Passport" box above, which is about vault-document
+// completeness -- this one is about whether the NPI number itself checks out
+// against the real federal registry.
+const NPI_BADGE_CONFIG: Record<
+  string,
+  { icon: React.ComponentType<{ className?: string }>; label: string; shortLabel: string; classes: string }
+> = {
+  verified: { icon: ShieldCheck, label: 'NPI Verified (CMS Registry)', shortLabel: 'Verified', classes: 'bg-blue-50 text-blue-700 border-blue-300' },
+  name_mismatch: { icon: ShieldAlert, label: 'NPI Name Mismatch', shortLabel: 'Mismatch', classes: 'bg-amber-50 text-amber-700 border-amber-300' },
+  inactive: { icon: ShieldAlert, label: 'NPI Inactive', shortLabel: 'Inactive', classes: 'bg-amber-50 text-amber-700 border-amber-300' },
+  not_found: { icon: ShieldX, label: 'NPI Not Found', shortLabel: 'Not Found', classes: 'bg-red-50 text-red-700 border-red-300' },
+  error: { icon: Clock, label: 'NPI Check Failed', shortLabel: 'Check Failed', classes: 'bg-slate-100 text-slate-500 border-slate-300' },
+  unverified: { icon: Clock, label: 'NPI Not Yet Checked', shortLabel: 'Not Checked', classes: 'bg-slate-100 text-slate-500 border-slate-300' },
+};
+
+const NpiStatusBadge: React.FC<{ status?: string; compact?: boolean }> = ({ status, compact }) => {
+  const config = NPI_BADGE_CONFIG[status || 'unverified'] || NPI_BADGE_CONFIG.unverified;
+  const Icon = config.icon;
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[10px] font-bold whitespace-nowrap ${config.classes}`}>
+      <Icon className="w-3 h-3" />
+      {compact ? config.shortLabel : config.label}
+    </span>
+  );
+};
 
 interface CredentialVaultProps {
   profile: ResidentProfile;
@@ -43,6 +74,34 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+
+  // NPI Registry Check State
+  const [isCheckingNpi, setIsCheckingNpi] = useState(false);
+  const [npiCheckMessage, setNpiCheckMessage] = useState<string | null>(null);
+
+  // Kicks off the real-time CMS NPI Registry lookup (via the verify-npi
+  // server function) and merges the result into the resident's profile so
+  // the badge updates immediately without a full page reload.
+  const handleVerifyNpi = async () => {
+    setIsCheckingNpi(true);
+    setNpiCheckMessage(null);
+    try {
+      const result = await verifyNpi();
+      onUpdateProfile({
+        ...profile,
+        npiVerificationStatus: result.status,
+        npiVerifiedName: result.verifiedName,
+        npiVerifiedCredential: result.verifiedCredential,
+        npiVerifiedTaxonomy: result.verifiedTaxonomy,
+        npiVerifiedAt: new Date().toISOString(),
+      });
+      setNpiCheckMessage(result.message);
+    } catch (err) {
+      setNpiCheckMessage(err instanceof Error ? err.message : 'NPI verification failed. Please try again.');
+    } finally {
+      setIsCheckingNpi(false);
+    }
+  };
 
   // Edit Profile Form State
   const [formProfile, setFormProfile] = useState<ResidentProfile>(profile);
@@ -360,8 +419,9 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
                     Pronouns: <strong className="text-blue-700">{profile.pronouns}</strong>
                   </span>
                 )}
-                <span className="bg-slate-50 px-3 py-1 rounded-xl border border-slate-200">
-                  NPI #: <strong className="text-blue-600">{profile.npiNumber}</strong>
+                <span className="bg-slate-50 px-3 py-1 rounded-xl border border-slate-200 inline-flex items-center gap-2">
+                  <span>NPI #: <strong className="text-blue-600">{profile.npiNumber}</strong></span>
+                  <NpiStatusBadge status={profile.npiVerificationStatus} />
                 </span>
                 <span className="bg-slate-50 px-3 py-1 rounded-xl border border-slate-200">
                   State License: <strong className="text-green-600">{profile.stateLicenseNumber} ({profile.licenseState})</strong>
@@ -638,13 +698,36 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-bold text-slate-700 block mb-1">NPI Number</label>
-                  <input
-                    type="text"
-                    value={formProfile.npiNumber}
-                    onChange={(e) => setFormProfile({ ...formProfile, npiNumber: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:bg-white focus:border-blue-600"
-                  />
+                  <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                    <span className="flex items-center justify-between gap-1.5">
+                      <span>NPI Number</span>
+                      <NpiStatusBadge status={profile.npiVerificationStatus} compact />
+                    </span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={formProfile.npiNumber}
+                      onChange={(e) => setFormProfile({ ...formProfile, npiNumber: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:bg-white focus:border-blue-600"
+                    />
+                    <button
+                      type="button"
+                      disabled={isCheckingNpi || !formProfile.npiNumber.trim()}
+                      onClick={handleVerifyNpi}
+                      className="shrink-0 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[11px] font-bold flex items-center gap-1.5 whitespace-nowrap"
+                      title="Check this NPI against the real CMS NPI Registry"
+                    >
+                      {isCheckingNpi ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
+                      {isCheckingNpi ? 'Checking...' : 'Verify Now'}
+                    </button>
+                  </div>
+                  {npiCheckMessage && (
+                    <p className="text-[10px] text-slate-500 mt-1.5 leading-snug">{npiCheckMessage}</p>
+                  )}
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    If you just changed this number, save your profile first, then click Verify Now.
+                  </p>
                 </div>
 
                 <div>

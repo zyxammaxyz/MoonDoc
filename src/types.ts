@@ -38,6 +38,21 @@ export interface CredentialDocument {
   notes?: string;
 }
 
+// Result of an automated lookup against the CMS NPPES NPI Registry. This is
+// separate from the resident's own Credential Vault completeness and from a
+// hospital's manual "cleared to work" decision -- it only confirms the NPI
+// number itself is real, active, and registered to a matching name. It is
+// set exclusively by the server-side verify-npi function (see
+// netlify/functions/verify-npi.js); the client never writes these fields
+// directly (a database trigger also blocks that at the DB level).
+export type NpiVerificationStatus =
+  | 'unverified'
+  | 'verified'
+  | 'name_mismatch'
+  | 'inactive'
+  | 'not_found'
+  | 'error';
+
 export interface ResidentProfile {
   id: string;
   firstName: string;
@@ -53,6 +68,11 @@ export interface ResidentProfile {
   gender?: string;
   pronouns?: string;
   npiNumber: string;
+  npiVerificationStatus?: NpiVerificationStatus;
+  npiVerifiedName?: string;
+  npiVerifiedCredential?: string;
+  npiVerifiedTaxonomy?: string;
+  npiVerifiedAt?: string;
   stateLicenseNumber: string;
   licenseState: string;
   deaNumber: string;

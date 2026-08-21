@@ -1,0 +1,12 @@
+# NOTE: intentionally no [build] section here. Your existing build
+# command/publish directory (configured in the Netlify dashboard) are left
+# exactly as they are -- this file only adds the serverless function used
+# for NPI verification, plus a friendlier URL for it.
+
+[functions]
+  directory = "netlify/functions"
+
+[[redirects]]
+  from = "/api/verify-npi"
+  to = "/.netlify/functions/verify-npi"
+  status = 200

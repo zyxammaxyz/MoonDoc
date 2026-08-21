@@ -5,6 +5,7 @@ import {
   CredentialDocument,
   HospitalFacility,
   MoonlightingShift,
+  NpiVerificationStatus,
   ResidentNotification,
   ResidentProfile,
 } from '../types';
@@ -28,6 +29,11 @@ interface ProfileRow {
   gender: string | null;
   pronouns: string | null;
   npi_number: string | null;
+  npi_verification_status: NpiVerificationStatus | null;
+  npi_verified_name: string | null;
+  npi_verified_credential: string | null;
+  npi_verified_taxonomy: string | null;
+  npi_verified_at: string | null;
   state_license_number: string | null;
   license_state: string | null;
   dea_number: string | null;
@@ -51,6 +57,11 @@ export function profileRowToResidentProfile(row: ProfileRow): ResidentProfile {
     gender: row.gender || undefined,
     pronouns: row.pronouns || undefined,
     npiNumber: row.npi_number || '',
+    npiVerificationStatus: row.npi_verification_status || 'unverified',
+    npiVerifiedName: row.npi_verified_name || undefined,
+    npiVerifiedCredential: row.npi_verified_credential || undefined,
+    npiVerifiedTaxonomy: row.npi_verified_taxonomy || undefined,
+    npiVerifiedAt: row.npi_verified_at || undefined,
     stateLicenseNumber: row.state_license_number || '',
     licenseState: row.license_state || '',
     deaNumber: row.dea_number || '',
@@ -227,6 +238,18 @@ export async function ensureProfileFromAuthUser(userId: string): Promise<Residen
     .upsert(residentProfileToRow(newProfile, user.id));
   if (upsertError) throw upsertError;
 
+  // Best-effort automatic NPI check right after account creation, so by the
+  // time the resident lands on their dashboard the badge already reflects a
+  // real answer instead of sitting at "unverified" until they notice a
+  // button. Deliberately not awaited/blocking and errors are swallowed --
+  // sign-up must never fail or stall because the NPI registry is slow or
+  // briefly unreachable. The resident (or the app) can always retry via
+  // verifyNpi() below.
+  verifyNpi().catch((err) => {
+    // eslint-disable-next-line no-console
+    console.warn('[MoonCall] Automatic NPI verification failed (non-fatal):', err);
+  });
+
   return newProfile;
 }
 
@@ -280,6 +303,49 @@ export async function saveProfile(profile: ResidentProfile): Promise<void> {
     .update(residentProfileToRow(profile, profile.id))
     .eq('id', profile.id);
   if (error) throw error;
+}
+
+export interface NpiVerificationResult {
+  status: NpiVerificationStatus;
+  message: string;
+  verifiedName?: string;
+  verifiedCredential?: string;
+  verifiedTaxonomy?: string;
+}
+
+/**
+ * Asks the server-side verify-npi function (netlify/functions/verify-npi.js)
+ * to look the resident's NPI up against the real CMS NPI Registry and record
+ * the result. This has to go through a server: the registry's API doesn't
+ * support CORS, and only a trusted server (using the Supabase service role
+ * key) is allowed to write the verification columns at all -- a database
+ * trigger rejects that write from anyone else, including the resident's own
+ * authenticated session.
+ */
+export async function verifyNpi(): Promise<NpiVerificationResult> {
+  const session = await getCurrentSession();
+  if (!session) throw new Error('You must be signed in to verify your NPI.');
+
+  const response = await fetch('/api/verify-npi', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session.access_token}`,
+    },
+  });
+
+  let data: NpiVerificationResult;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error('NPI verification returned an unexpected response. Please try again.');
+  }
+
+  if (!response.ok) {
+    throw new Error(data?.message || 'NPI verification failed. Please try again.');
+  }
+
+  return data;
 }
 
 export async function uploadHeadshot(userId: string, file: File): Promise<string> {
