@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { CredentialDocument } from '../types';
 import { X, FileText, CheckCircle2, Download, Calendar, ShieldCheck, Printer } from 'lucide-react';
 
@@ -8,12 +8,29 @@ interface DocumentViewerModalProps {
 }
 
 export const DocumentViewerModal: React.FC<DocumentViewerModalProps> = ({ document: doc, onClose }) => {
+  // Close on Escape, and close on a click that lands on the dimmed backdrop
+  // itself rather than the card -- matches ShiftDetailModal/ApplicationChatModal
+  // so there's always a way out besides finding the small X button.
+  useEffect(() => {
+    if (!doc) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [doc, onClose]);
+
   if (!doc) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div
+      className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div className="bg-white border border-slate-200 rounded-3xl max-w-3xl w-full p-6 sm:p-8 space-y-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 my-8 text-slate-900">
-        
+
         {/* Close Button */}
         <button
           onClick={onClose}

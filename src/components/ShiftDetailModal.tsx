@@ -90,17 +90,41 @@ export const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
     }, 800);
   };
 
+  // Close on Escape, and close on a click that lands on the dimmed backdrop
+  // itself (not on the card) -- matches the pattern already used in
+  // ApplicationChatModal. Without this, a job with a lot of missing
+  // requirements (a long list, like the credentialing checklist below) could
+  // leave a resident stuck: the X button used to be positioned inside the
+  // scrolling content area, so scrolling down to read requirements scrolled
+  // the only way to close it right off the top of the screen.
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 my-8 text-slate-900">
-        
-        {/* Close Button */}
+    <div
+      className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 my-8 text-slate-900 flex flex-col max-h-[85vh] overflow-hidden">
+
+        {/* Close Button -- sits outside the scrollable area below, so it
+            stays put in the corner of the card no matter how far down a
+            resident scrolls to read a long requirements list. */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors"
+          className="absolute top-5 right-5 z-10 text-slate-400 hover:text-slate-700 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
+
+        <div className="p-6 sm:p-8 space-y-6 overflow-y-auto">
 
         {showSuccessMessage ? (
           /* Application Success View */
@@ -359,6 +383,7 @@ export const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
           </>
         )}
 
+        </div>
       </div>
     </div>
   );
