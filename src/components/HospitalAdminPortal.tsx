@@ -856,7 +856,7 @@ export function HospitalAdminPortal({
 
                           <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-700">
                             <span className="font-bold text-blue-700">
-                              Dr. {resident.firstName} {resident.lastName}, {resident.title} ({resident.pgyLevel})
+                              {resident.firstName} {resident.lastName}, {resident.title} ({resident.pgyLevel})
                             </span>
                             <span>•</span>
                             <span>{resident.residencyProgram}</span>
@@ -999,7 +999,7 @@ export function HospitalAdminPortal({
                           </h3>
 
                           <p className="text-xs text-slate-600 mt-0.5">
-                            Physician: <strong className="text-slate-800">Dr. {resident.firstName} {resident.lastName}, {resident.title}</strong> ({resident.residencyProgram})
+                            Physician: <strong className="text-slate-800">{resident.firstName} {resident.lastName}, {resident.title}</strong> ({resident.residencyProgram})
                           </p>
                         </div>
                       </div>
@@ -1157,7 +1157,7 @@ export function HospitalAdminPortal({
                         <div>
                           <div className="flex items-center space-x-2">
                             <h2 className="text-base font-bold text-slate-900">
-                              Dr. {resident.firstName} {resident.lastName}, {resident.title}
+                              {resident.firstName} {resident.lastName}, {resident.title}
                             </h2>
                             <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-md border border-blue-200">
                               {resident.pgyLevel}
@@ -1491,7 +1491,7 @@ export function HospitalAdminPortal({
                           <div>
                             <div className="flex items-center space-x-2">
                               <h3 className="text-sm font-bold">
-                                Dr. {resident.firstName} {resident.lastName}, {resident.title}
+                                {resident.firstName} {resident.lastName}, {resident.title}
                               </h3>
                               <span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 text-[10px] font-extrabold rounded-md border border-blue-400/30">
                                 {resident.pgyLevel}

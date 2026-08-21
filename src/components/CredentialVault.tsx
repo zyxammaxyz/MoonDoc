@@ -398,7 +398,7 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
             <div>
               <div className="flex items-center space-x-2">
                 <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-blue-900">
-                  Dr. {profile.firstName} {profile.lastName}, {profile.title}
+                  {profile.firstName} {profile.lastName}, {profile.title}
                 </h1>
                 <span className="px-2.5 py-0.5 text-xs font-bold bg-blue-600 text-white rounded-lg shadow-sm">
                   {profile.pgyLevel}
