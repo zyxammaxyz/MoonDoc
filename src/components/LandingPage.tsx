@@ -34,6 +34,9 @@ import {
   Users,
   FileCheck,
   Info,
+  HelpCircle,
+  Scale,
+  GraduationCap,
 } from 'lucide-react';
 import { ResidentProfile, MedicalSpecialty, PGYLevel } from '../types';
 import { SOCAL_RESIDENCY_PROGRAMS, INITIAL_RESIDENT, LANDING_PREVIEW_HOSPITALS, LANDING_PREVIEW_SHIFTS } from '../data/mockData';
@@ -160,6 +163,73 @@ const INSTITUTION_HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
   },
 ];
 
+// "Moonlighting Logistics" educational content — a broad, plain-language
+// primer for residents who are new to the idea of moonlighting entirely.
+// Sits as a third tab next to "For Residents" / "For Institutions" in the
+// "How MoonCall Works" section below. This is general education, not
+// institution-specific legal/financial advice — residents are always
+// pointed back to their own program's PD/GME office for the final word.
+interface MoonlightingLogisticsTopic {
+  question: string;
+  answer: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+const MOONLIGHTING_LOGISTICS_TOPICS: MoonlightingLogisticsTopic[] = [
+  {
+    question: 'What actually is "moonlighting"?',
+    answer:
+      'Moonlighting is paid clinical work a resident takes on outside their normal training schedule — covering shifts at an urgent care, ER, or hospital floor for pay, on top of (and separate from) the unpaid clinical duties already built into residency. "Internal" moonlighting happens within your own training hospital or health system; "external" moonlighting is anywhere else, like a community urgent care.',
+    icon: HelpCircle,
+  },
+  {
+    question: 'Who can moonlight — is it up to my institution?',
+    answer:
+      "Entirely. Every residency program sets its own moonlighting policy, and some prohibit it outright — often for surgical or other high-intensity specialties, or during a resident's first year. Programs that do allow it usually require PGY-2 status or later, a full unrestricted state medical license (a training-only license typically won't qualify), and written sign-off from your program director and GME office before you take a single shift. Residents on a J-1 visa generally can't moonlight at all due to visa restrictions, so check with your GME office if you're on one.",
+    icon: Scale,
+  },
+  {
+    question: 'What steps do I need to take before I can start?',
+    answer:
+      'Typically, in order: confirm your program actually allows it and get that in writing from your PD or GME office; hold a full, unrestricted state medical license; line up malpractice coverage for the moonlighting work itself; get DEA registration if the role involves prescribing controlled substances; and make sure the added hours won\'t push you over ACGME limits. MoonCall\'s Credential Vault is built to hold all of this — license, DEA, board certs — in one verified Passport you share once instead of re-submitting it to every site.',
+    icon: ClipboardList,
+  },
+  {
+    question: 'Whose approval do I actually need?',
+    answer:
+      "Two separate approvals, not one: your own residency program (PD and/or GME office, confirming it won't interfere with training and that you're in good standing) and the site where you want to work (which credentials and clears you independently, the same way it would any other physician). MoonCall streamlines the second one — sites can request whatever they still need directly in your chat thread instead of a slow email chain — but the first approval is always between you and your own program.",
+    icon: ShieldCheck,
+  },
+  {
+    question: 'How does it work with my duty hours?',
+    answer:
+      "Under ACGME rules, both internal and external moonlighting hours count toward your 80-hour weekly limit (averaged over four weeks) — moonlighting doesn't get a separate bucket, and PGY-1 residents aren't permitted to moonlight at all. That means every moonlighting shift needs to be logged, not just for your own sake — your program is accountable for your total hours too. MoonCall automatically tracks every completed shift and keeps a running hour total, so you always know where you stand before picking up another one.",
+    icon: Clock,
+  },
+  {
+    question: 'Who pays for malpractice insurance?',
+    answer:
+      "For most moonlighting shifts, the hiring facility (or the staffing group behind it) provides malpractice coverage for the work you do there — not your home residency program. Your program's malpractice policy almost always covers only the clinical work that's actually part of your training, not outside moonlighting. Before accepting a shift, confirm coverage exists in writing, and check whether it's occurrence-based or claims-made (claims-made policies can require separate \"tail\" coverage later). MoonCall shows whether a posted shift includes malpractice coverage right on the listing, so it's never a surprise after you've already said yes.",
+    icon: FileCheck,
+  },
+  {
+    question: 'What do I do with the money I make?',
+    answer:
+      "Moonlighting pay is usually issued separately from your resident salary — often as 1099 contractor income rather than a W-2 — which means no taxes are automatically withheld. A common rule of thumb is to set aside roughly a quarter to a third of it for federal, state, and self-employment tax, and to talk to a tax professional about quarterly estimated payments. Beyond taxes, many residents use moonlighting income to pay down loans faster, build an emergency fund, or start a retirement account like an individual 401(k) — moonlighting income can open up tax-advantaged retirement contributions your resident salary alone doesn't.",
+    icon: DollarSign,
+  },
+];
+
+// Quick stat chips shown above the topic cards — sourced from published
+// physician moonlighting surveys and ACGME policy, kept intentionally broad
+// since exact figures vary by specialty, region, and institution.
+const MOONLIGHTING_FAST_FACTS: { stat: string; label: string }[] = [
+  { stat: '~1 in 3', label: 'physicians take on moonlighting or secondary paid clinical work at some point' },
+  { stat: '$100–$200/hr', label: 'typical moonlighting pay range, depending on setting and region' },
+  { stat: '80 hrs/wk', label: 'the ACGME limit every moonlighting hour counts against — no exceptions' },
+  { stat: 'PGY-2+', label: 'the earliest most programs allow moonlighting to start (PGY-1s: never)' },
+];
+
 export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospitalPortal }) => {
   // Both demo modes (Resident + Hospital MSO Admin) stay hidden from public
   // visitors until unlocked via the secret preview link or footer tap combo.
@@ -210,7 +280,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
 
   // Which audience's breakdown is showing in the "How MoonCall Works"
   // section further down the page.
-  const [howItWorksAudience, setHowItWorksAudience] = useState<'resident' | 'institution'>('resident');
+  const [howItWorksAudience, setHowItWorksAudience] = useState<'resident' | 'institution' | 'logistics'>('resident');
 
   // Auth Form State
   const [email, setEmail] = useState('');
@@ -449,7 +519,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
   // Jumps straight to the "How MoonCall Works" breakdown and pre-selects
   // the matching audience tab — used by the "For Residents" / "For
   // Institutions" buttons in the top nav.
-  const scrollToHowItWorks = (audience: 'resident' | 'institution') => {
+  const scrollToHowItWorks = (audience: 'resident' | 'institution' | 'logistics') => {
     setHowItWorksAudience(audience);
     document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
@@ -495,6 +565,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
             >
               <Hospital className="w-3.5 h-3.5 text-indigo-600" />
               <span className="hidden sm:inline">For Institutions</span>
+            </button>
+
+            <button
+              onClick={() => scrollToHowItWorks('logistics')}
+              className="px-2.5 sm:px-3 py-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all"
+            >
+              <GraduationCap className="w-3.5 h-3.5 text-amber-600" />
+              <span className="hidden sm:inline">Moonlighting Logistics</span>
             </button>
 
             <button
@@ -683,12 +761,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
               <span>How MoonCall Works</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              {howItWorksAudience === 'resident' ? 'From Sign-Up to Paycheck' : 'From Sign-Up to Shift Coverage'}
+              {howItWorksAudience === 'resident'
+                ? 'From Sign-Up to Paycheck'
+                : howItWorksAudience === 'institution'
+                ? 'From Sign-Up to Shift Coverage'
+                : 'New to Moonlighting? Start Here'}
             </h2>
             <p className="text-sm text-slate-600 leading-relaxed">
               {howItWorksAudience === 'resident'
                 ? "Here's exactly how a resident moves through MoonCall — from creating an account to getting paid for a completed shift."
-                : "Here's exactly how an institution moves through MoonCall — from creating an account to tracking a completed shift."}
+                : howItWorksAudience === 'institution'
+                ? "Here's exactly how an institution moves through MoonCall — from creating an account to tracking a completed shift."
+                : "A broad, plain-language primer on what moonlighting actually is, who's allowed to do it, and how it works — for residents who are new to the idea."}
             </p>
 
             {/* Audience Pills */}
@@ -717,32 +801,93 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onShowHospita
                 <Hospital className="w-4 h-4" />
                 <span>For Institutions</span>
               </button>
+              <button
+                type="button"
+                onClick={() => setHowItWorksAudience('logistics')}
+                className={`px-4 py-2 rounded-xl text-xs font-extrabold flex items-center space-x-2 transition-all cursor-pointer ${
+                  howItWorksAudience === 'logistics'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <GraduationCap className="w-4 h-4" />
+                <span>Moonlighting Logistics</span>
+              </button>
             </div>
           </div>
 
-          {/* Vertical Step Timeline */}
-          <div className="relative max-w-2xl mx-auto">
-            <div className="absolute left-[19px] top-2 bottom-2 w-0.5 bg-blue-100" />
-            {(howItWorksAudience === 'resident' ? RESIDENT_HOW_IT_WORKS_STEPS : INSTITUTION_HOW_IT_WORKS_STEPS).map((step, index) => {
-              const StepIcon = step.icon;
-              return (
-                <div key={step.title} className="relative flex items-start space-x-4 pb-8 last:pb-0">
-                  <div className="relative z-10 w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-black text-sm shadow-md ring-4 ring-white shrink-0">
-                    {index + 1}
+          {howItWorksAudience === 'logistics' ? (
+            /* Moonlighting Logistics — broad educational primer, not a step timeline */
+            <div className="max-w-3xl mx-auto space-y-8">
+
+              {/* Fast Facts strip */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {MOONLIGHTING_FAST_FACTS.map((fact) => (
+                  <div key={fact.label} className="bg-blue-50 border border-blue-200 rounded-2xl p-3 text-center space-y-1">
+                    <p className="text-lg font-black text-blue-700">{fact.stat}</p>
+                    <p className="text-[10px] text-slate-600 leading-snug">{fact.label}</p>
                   </div>
-                  <div className="pt-1.5 space-y-1.5">
-                    <div className="flex items-center space-x-2">
-                      <div className="p-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 shrink-0">
-                        <StepIcon className="w-4 h-4" />
+                ))}
+              </div>
+
+              {/* Topic Q&A cards */}
+              <div className="grid sm:grid-cols-2 gap-4">
+                {MOONLIGHTING_LOGISTICS_TOPICS.map((topic) => {
+                  const TopicIcon = topic.icon;
+                  return (
+                    <div key={topic.question} className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <div className="p-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 shrink-0">
+                          <TopicIcon className="w-4 h-4" />
+                        </div>
+                        <h3 className="text-sm font-black text-slate-900">{topic.question}</h3>
                       </div>
-                      <h3 className="text-sm font-black text-slate-900">{step.title}</h3>
+                      <p className="text-xs text-slate-600 leading-relaxed">{topic.answer}</p>
                     </div>
-                    <p className="text-xs text-slate-600 leading-relaxed">{step.description}</p>
-                  </div>
+                  );
+                })}
+              </div>
+
+              {/* Why MoonCall callout */}
+              <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-2xl p-6 space-y-2 shadow-lg">
+                <div className="flex items-center space-x-2">
+                  <Sparkles className="w-4 h-4 text-amber-300" />
+                  <h3 className="text-sm font-black">Why MoonCall Makes This Easier</h3>
                 </div>
-              );
-            })}
-          </div>
+                <p className="text-xs text-blue-50 leading-relaxed">
+                  Moonlighting's biggest friction points usually aren't clinical — they're paperwork, approvals, and tracking. MoonCall centralizes all of it: one verified Credential Vault instead of re-submitting documents to every site, automatic NPI verification, malpractice coverage shown right on each listing, and a running hour total so you always know where you stand against the 80-hour limit. Less chasing paperwork, more time actually earning.
+                </p>
+                <p className="text-[11px] text-blue-100/80 pt-1">
+                  This is general education, not legal or financial advice — always confirm your own program's specific moonlighting policy with your PD or GME office before accepting a shift.
+                </p>
+              </div>
+
+            </div>
+          ) : (
+            /* Vertical Step Timeline */
+            <div className="relative max-w-2xl mx-auto">
+              <div className="absolute left-[19px] top-2 bottom-2 w-0.5 bg-blue-100" />
+              {(howItWorksAudience === 'resident' ? RESIDENT_HOW_IT_WORKS_STEPS : INSTITUTION_HOW_IT_WORKS_STEPS).map((step, index) => {
+                const StepIcon = step.icon;
+                return (
+                  <div key={step.title} className="relative flex items-start space-x-4 pb-8 last:pb-0">
+                    <div className="relative z-10 w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-black text-sm shadow-md ring-4 ring-white shrink-0">
+                      {index + 1}
+                    </div>
+                    <div className="pt-1.5 space-y-1.5">
+                      <div className="flex items-center space-x-2">
+                        <div className="p-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 shrink-0">
+                          <StepIcon className="w-4 h-4" />
+                        </div>
+                        <h3 className="text-sm font-black text-slate-900">{step.title}</h3>
+                      </div>
+                      <p className="text-xs text-slate-600 leading-relaxed">{step.description}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
         </div>
 
