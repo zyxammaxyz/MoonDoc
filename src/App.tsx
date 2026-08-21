@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { LandingPage } from './components/LandingPage';
 import { Header } from './components/Header';
-import { ProgressBar } from './components/ProgressBar';
 import { MapView } from './components/MapView';
 import { CredentialVault } from './components/CredentialVault';
 import { ShiftDetailModal } from './components/ShiftDetailModal';
@@ -1022,14 +1021,6 @@ export default function App() {
         )}
 
       </main>
-
-      {/* Floating Bottom Credential Progress Bar */}
-      <ProgressBar
-        documents={profile.documents}
-        completionPercentage={completionPercentage}
-        onOpenVault={() => setActiveTab('vault')}
-        availableShifts={shifts}
-      />
 
       {/* Modals */}
       {selectedShiftModal && (

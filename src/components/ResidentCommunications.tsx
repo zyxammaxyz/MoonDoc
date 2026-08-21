@@ -21,7 +21,6 @@ import {
   Clock,
   Sparkles,
   User,
-  Plus,
   ChevronRight,
   ExternalLink,
   Download,
@@ -341,29 +340,6 @@ export const ResidentCommunications: React.FC<ResidentCommunicationsProps> = ({
                 );
               })
             )}
-          </div>
-
-          {/* Quick Connection Action for Other Partner Sites */}
-          <div className="p-3 border-t border-slate-200 bg-white/80">
-            <div className="text-[11px] font-bold text-slate-700 mb-2 flex items-center justify-between">
-              <span>Quick Connect to Partner Sites</span>
-            </div>
-            <div className="flex gap-1.5 overflow-x-auto pb-1">
-              {hospitals
-                .filter((h) => !conversationThreads.some((t) => t.siteKey === h.name))
-                .slice(0, 3)
-                .map((h) => (
-                  <button
-                    key={h.id}
-                    onClick={() => onConnectSite(h)}
-                    className="px-2.5 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 text-slate-700 border border-slate-200 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all cursor-pointer flex items-center space-x-1 shrink-0"
-                    title={`Connect & express interest in ${h.name}`}
-                  >
-                    <Plus className="w-3 h-3 text-blue-600" />
-                    <span className="truncate max-w-[110px]">{h.name.split(' ')[0]}</span>
-                  </button>
-                ))}
-            </div>
           </div>
         </div>
 
