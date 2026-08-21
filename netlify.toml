@@ -1,7 +1,8 @@
 # NOTE: intentionally no [build] section here. Your existing build
 # command/publish directory (configured in the Netlify dashboard) are left
-# exactly as they are -- this file only adds the serverless function used
-# for NPI verification, plus a friendlier URL for it.
+# exactly as they are -- this file only adds the serverless functions used
+# for NPI verification and the PD approval-request email, plus friendlier
+# URLs for them.
 
 [functions]
   directory = "netlify/functions"
@@ -9,4 +10,9 @@
 [[redirects]]
   from = "/api/verify-npi"
   to = "/.netlify/functions/verify-npi"
+  status = 200
+
+[[redirects]]
+  from = "/api/send-pd-request"
+  to = "/.netlify/functions/send-pd-request"
   status = 200

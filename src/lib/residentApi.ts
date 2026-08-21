@@ -348,6 +348,56 @@ export async function verifyNpi(): Promise<NpiVerificationResult> {
   return data;
 }
 
+export interface PdApprovalRequestInput {
+  pdName: string;
+  pdEmail: string;
+  pdCustomNote: string;
+  uploadUrl: string;
+}
+
+export interface PdApprovalRequestResult {
+  status: 'sent';
+  pdName: string;
+  pdEmail: string;
+  sentAt: string;
+}
+
+/**
+ * Asks the server-side send-pd-request function
+ * (netlify/functions/send-pd-request.js) to actually email the resident's
+ * Program Director with a secure upload link for their moonlighting
+ * approval letter. This has to go through a server: real SMTP credentials
+ * can never be shipped to the browser, and the resident's name/program/PGY
+ * level are pulled from their own verified profile server-side rather than
+ * trusted from whatever this call sends.
+ */
+export async function sendPdApprovalRequest(input: PdApprovalRequestInput): Promise<PdApprovalRequestResult> {
+  const session = await getCurrentSession();
+  if (!session) throw new Error('You must be signed in to send this request.');
+
+  const response = await fetch('/api/send-pd-request', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session.access_token}`,
+    },
+    body: JSON.stringify(input),
+  });
+
+  let data: PdApprovalRequestResult & { message?: string };
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error('That returned an unexpected response. Please try again.');
+  }
+
+  if (!response.ok) {
+    throw new Error(data?.message || 'Could not send the email. Please try again.');
+  }
+
+  return data;
+}
+
 // Client-side gate before anything reaches storage. This is a data-hygiene
 // check, not a security boundary on its own (nothing stops someone from
 // renaming a file's extension) -- the real protection is that the

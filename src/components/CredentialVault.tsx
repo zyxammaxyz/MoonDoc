@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ResidentProfile, CredentialDocument, DocumentCategory, PGYLevel, MedicalSpecialty } from '../types';
 import { SOCAL_RESIDENCY_PROGRAMS } from '../data/mockData';
 import { isSupabaseConfigured } from '../lib/supabaseClient';
-import { uploadHeadshot, uploadCredentialDocumentFile, verifyNpi } from '../lib/residentApi';
+import { uploadHeadshot, uploadCredentialDocumentFile, verifyNpi, sendPdApprovalRequest } from '../lib/residentApi';
 import {
   ShieldCheck,
   UploadCloud,
@@ -134,11 +134,12 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
 
   // Program Director Request Email State
   const [isPDRequestOpen, setIsPDRequestOpen] = useState(false);
-  const [pdName, setPdName] = useState('Dr. Robert Vance, MD');
-  const [pdEmail, setPdEmail] = useState('rvance@keck.usc.edu');
-  const [pdCustomNote, setPdCustomNote] = useState('Hi Dr. Vance, I am applying for moonlighting opportunities. Could you please upload an updated Good Standing & Moonlighting Approval Letter for my MoonCall Passport using this secure upload link?');
+  const [pdName, setPdName] = useState('');
+  const [pdEmail, setPdEmail] = useState('');
+  const [pdCustomNote, setPdCustomNote] = useState('Hi, I am applying for moonlighting opportunities. Could you please upload an updated Good Standing & Moonlighting Approval Letter for my MoonCall Passport using this secure upload link?');
   const [isSendingPDRequest, setIsSendingPDRequest] = useState(false);
   const [pdSentConfirmation, setPdSentConfirmation] = useState<{ pdName: string; pdEmail: string; dateSent: string } | null>(null);
+  const [pdRequestError, setPdRequestError] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
 
   const pdUploadToken = `https://mooncall.app/upload/pd-letter/token-${profile.id.replace('res_', '')}-2026`;
@@ -149,7 +150,10 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
     setTimeout(() => setLinkCopied(false), 2500);
   };
 
-  const handleSendPDRequest = (e: React.FormEvent) => {
+  // Actually sends the email via the send-pd-request server function (see
+  // netlify/functions/send-pd-request.js) -- this used to just fake a
+  // loading spinner and mark itself "sent" without any email going out.
+  const handleSendPDRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!pdEmail.trim()) {
       alert("Please enter your Program Director's email address.");
@@ -157,15 +161,21 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
     }
 
     setIsSendingPDRequest(true);
+    setPdRequestError(null);
 
-    setTimeout(() => {
-      const sentData = {
+    try {
+      const result = await sendPdApprovalRequest({
         pdName: pdName.trim() || 'Program Director',
         pdEmail: pdEmail.trim(),
-        dateSent: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
-      };
+        pdCustomNote: pdCustomNote.trim(),
+        uploadUrl: pdUploadToken,
+      });
 
-      setIsSendingPDRequest(false);
+      const sentData = {
+        pdName: result.pdName,
+        pdEmail: result.pdEmail,
+        dateSent: new Date(result.sentAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+      };
       setPdSentConfirmation(sentData);
 
       // Update document notes in resident profile so it persists
@@ -181,7 +191,11 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
       });
 
       onUpdateProfile({ ...profile, documents: updatedDocs });
-    }, 800);
+    } catch (err) {
+      setPdRequestError(err instanceof Error ? err.message : 'Could not send the email. Please try again.');
+    } finally {
+      setIsSendingPDRequest(false);
+    }
   };
 
   const handleCustomDocSubmit = async (e: React.FormEvent) => {
@@ -1305,6 +1319,17 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
                 </div>
               )}
 
+              {/* Error Banner if the send failed */}
+              {pdRequestError && (
+                <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-start space-x-3 text-rose-900">
+                  <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="font-bold">Couldn't send the email</p>
+                    <p className="text-[11px] text-rose-800">{pdRequestError}</p>
+                  </div>
+                </div>
+              )}
+
               <form onSubmit={handleSendPDRequest} className="space-y-5">
                 {/* Inputs Row */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1373,11 +1398,11 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
                       </div>
                       <div className="flex items-center space-x-2">
                         <span className="text-slate-400 w-14 font-semibold">From:</span>
-                        <span className="text-slate-300 font-mono">MoonCall Passport &lt;requests@mooncall.app&gt;</span>
+                        <span className="text-slate-300 font-mono">MoonCall &lt;maxbruin17@g.ucla.edu&gt;</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <span className="text-slate-400 w-14 font-semibold">Subject:</span>
-                        <span className="text-white font-bold">[Action Required] Moonlighting Approval Request - Dr. {profile.name}</span>
+                        <span className="text-white font-bold">[Action Required] Moonlighting Approval Request - {profile.firstName} {profile.lastName}</span>
                       </div>
                     </div>
 
@@ -1388,7 +1413,7 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
                       </p>
 
                       <p className="text-slate-700 leading-relaxed">
-                        <strong>Dr. {profile.name}</strong> ({profile.residencyProgram}, PGY-{profile.pgyLevel}) has requested an official Program Director Moonlighting Approval & Good Standing Letter for their verified MoonCall Passport.
+                        <strong>{profile.firstName} {profile.lastName}, {profile.title}</strong> ({profile.residencyProgram}, {profile.pgyLevel}) has requested an official Program Director Moonlighting Approval & Good Standing Letter for their verified MoonCall Passport.
                       </p>
 
                       {pdCustomNote && (
@@ -1407,7 +1432,7 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
                           Upload Signed Approval Letter
                         </h4>
                         <p className="text-[11px] text-indigo-100 max-w-md mx-auto">
-                          Click the secure link below to upload the signed PDF. The letter will be instantly verified and attached to Dr. {profile.name}'s MoonCall Passport profile.
+                          Click the secure link below to upload the signed PDF so it can be attached to {profile.firstName} {profile.lastName}'s MoonCall Passport profile.
                         </p>
                         <div className="pt-1">
                           <div className="inline-flex items-center space-x-2 px-3 py-1.5 bg-white text-indigo-900 rounded-lg font-mono text-[10px] font-bold shadow-inner max-w-full truncate">
@@ -1418,7 +1443,7 @@ export const CredentialVault: React.FC<CredentialVaultProps> = ({
                       </div>
 
                       <p className="text-[11px] text-slate-500 pt-1">
-                        Thank you for supporting Dr. {profile.name}'s professional development.<br />
+                        Thank you for supporting {profile.firstName} {profile.lastName}'s professional development.<br />
                         <strong>MoonCall Credentialing Operations</strong>
                       </p>
                     </div>
