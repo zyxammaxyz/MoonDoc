@@ -1042,6 +1042,68 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
                         </div>
                       </div>
 
+                      {/* Past Jobs -- which residents have connected to this
+                          specific posting, and a manual, hospital-side
+                          sign-off that they actually worked it. Deliberately
+                          never flipped automatically, matching how the
+                          "Verified" credentialing sign-off already works. */}
+                      <div className="px-4 pb-4">
+                        <div className="pt-3 border-t border-slate-100">
+                          <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5 mb-2">
+                            <History className="w-3.5 h-3.5 text-slate-400" />
+                            <span>Past Jobs</span>
+                          </p>
+                          {(() => {
+                            const connected = interests.filter((t) => t.shiftId === shift.id);
+                            if (connected.length === 0) {
+                              return (
+                                <p className="text-[11px] text-slate-400">No residents connected to this job yet.</p>
+                              );
+                            }
+                            return (
+                              <div className="space-y-1.5">
+                                {connected.map((thread) => (
+                                  <div
+                                    key={thread.id}
+                                    className="flex items-center justify-between gap-3 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl"
+                                  >
+                                    <div className="min-w-0">
+                                      <p className="text-xs font-bold text-slate-800 truncate">
+                                        {thread.residentName}
+                                        {thread.residentProgram && (
+                                          <span className="text-slate-400 font-medium"> · {thread.residentProgram}</span>
+                                        )}
+                                      </p>
+                                      <p className="text-[11px] text-slate-500 truncate">{shift.date}</p>
+                                    </div>
+
+                                    {thread.completed ? (
+                                      <span className="shrink-0 flex items-center space-x-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg">
+                                        <CheckCircle2 className="w-3 h-3" />
+                                        <span>Completed</span>
+                                      </span>
+                                    ) : (
+                                      <button
+                                        onClick={() => handleToggleCompleted(thread)}
+                                        disabled={togglingCompletedId === thread.id}
+                                        className="shrink-0 flex items-center space-x-1 px-2.5 py-1.5 bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-slate-600 hover:text-emerald-700 text-[10px] font-bold rounded-lg cursor-pointer disabled:opacity-50 transition-colors"
+                                      >
+                                        {togglingCompletedId === thread.id ? (
+                                          <Loader2 className="w-3 h-3 animate-spin" />
+                                        ) : (
+                                          <ClipboardCheck className="w-3 h-3" />
+                                        )}
+                                        <span>Verify Completion</span>
+                                      </button>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      </div>
+
                       {isExpanded && (
                         <div className="border-t border-slate-100 bg-slate-50/70 p-4 space-y-4">
                           <div>
@@ -1645,93 +1707,20 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
           </div>
         ) : (
           <div className="space-y-3">
-            {sites.map((site) => {
-              // Today's date as an ISO 'YYYY-MM-DD' string -- shift.date is
-              // stored in the same format, so plain string comparison works
-              // for "has this shift already happened" without needing a
-              // date-parsing library.
-              const todayIso = new Date().toISOString().slice(0, 10);
-              const pastJobs = interests
-                .filter((t) => t.hospitalId === site.id && t.shiftId)
-                .map((t) => ({ thread: t, shift: shifts.find((s) => s.id === t.shiftId) }))
-                .filter((pj): pj is { thread: SiteInterestThread; shift: MoonlightingShift } =>
-                  !!pj.shift && (pj.shift.date <= todayIso || pj.thread.completed)
-                )
-                .sort((a, b) => b.shift.date.localeCompare(a.shift.date));
-
-              return (
-                <div key={site.id} className="bg-white border border-slate-200 rounded-2xl p-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <h3 className="font-bold text-sm text-slate-900">{site.name}</h3>
-                        <span className="flex items-center space-x-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">
-                          <CheckCircle2 className="w-3 h-3" />
-                          <span>Live on map</span>
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-0.5">{site.address}, {site.city}, {site.state}</p>
-                    </div>
+            {sites.map((site) => (
+              <div key={site.id} className="bg-white border border-slate-200 rounded-2xl p-4 flex items-start justify-between">
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <h3 className="font-bold text-sm text-slate-900">{site.name}</h3>
+                    <span className="flex items-center space-x-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">
+                      <CheckCircle2 className="w-3 h-3" />
+                      <span>Live on map</span>
+                    </span>
                   </div>
-
-                  {/* Past Jobs -- a real track record of who worked this
-                      site and when, built entirely from manual "Verify
-                      Completion" sign-offs below (never inferred just
-                      because a shift date passed). */}
-                  <div className="mt-3.5 pt-3.5 border-t border-slate-100">
-                    <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5 mb-2">
-                      <History className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Past Jobs</span>
-                    </p>
-
-                    {pastJobs.length === 0 ? (
-                      <p className="text-[11px] text-slate-400">No completed shifts at this site yet.</p>
-                    ) : (
-                      <div className="space-y-1.5">
-                        {pastJobs.map(({ thread, shift }) => (
-                          <div
-                            key={thread.id}
-                            className="flex items-center justify-between gap-3 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl"
-                          >
-                            <div className="min-w-0">
-                              <p className="text-xs font-bold text-slate-800 truncate">
-                                {thread.residentName}
-                                {thread.residentProgram && (
-                                  <span className="text-slate-400 font-medium"> · {thread.residentProgram}</span>
-                                )}
-                              </p>
-                              <p className="text-[11px] text-slate-500 truncate">
-                                {shift.title} · {shift.date}
-                              </p>
-                            </div>
-
-                            {thread.completed ? (
-                              <span className="shrink-0 flex items-center space-x-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg">
-                                <CheckCircle2 className="w-3 h-3" />
-                                <span>Completed</span>
-                              </span>
-                            ) : (
-                              <button
-                                onClick={() => handleToggleCompleted(thread)}
-                                disabled={togglingCompletedId === thread.id}
-                                className="shrink-0 flex items-center space-x-1 px-2.5 py-1.5 bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-slate-600 hover:text-emerald-700 text-[10px] font-bold rounded-lg cursor-pointer disabled:opacity-50 transition-colors"
-                              >
-                                {togglingCompletedId === thread.id ? (
-                                  <Loader2 className="w-3 h-3 animate-spin" />
-                                ) : (
-                                  <ClipboardCheck className="w-3 h-3" />
-                                )}
-                                <span>Verify Completion</span>
-                              </button>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">{site.address}, {site.city}, {site.state}</p>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         )}
         </>
