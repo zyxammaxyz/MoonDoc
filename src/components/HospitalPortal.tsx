@@ -81,6 +81,121 @@ const DOC_CATEGORY_LABELS: Record<DocumentCategory, string> = {
   other: 'Other',
 };
 
+// ============================================================================
+// Fake, clearly-labeled EXAMPLE data for the Jobs tab. Every hospital starts
+// with zero real jobs, so there'd otherwise be nothing to look at until one
+// gets posted and a resident connects to it -- this lets an MSO see exactly
+// how Past Jobs / Verify Completion / the calendar will behave before that
+// happens. Purely client-side: it is never written to Supabase, never
+// fetched from it, and never shown to residents on the real Opportunity Map
+// (which only ever renders real `shifts` rows) -- it only ever exists in
+// this component's own state. Every title and name is suffixed "(Example)"
+// so it can never be mistaken for a real job or a real resident, matching
+// how the public Affiliated Sites preview labels its fictional entries.
+// ============================================================================
+const EXAMPLE_SITE_NAME = 'Sunview Community ED (Example)';
+
+const EXAMPLE_SHIFTS: MoonlightingShift[] = [
+  {
+    id: 'example_shift_1',
+    hospitalId: 'example_site',
+    hospitalName: EXAMPLE_SITE_NAME,
+    facilityLocation: '400 Sunview Blvd, Van Nuys, CA',
+    lat: 34.1867,
+    lng: -118.4487,
+    distanceMiles: 12,
+    specialty: 'Emergency Medicine',
+    title: 'Weekend ED Swing Coverage (Example)',
+    department: 'Emergency Department',
+    hourlyRate: 180,
+    totalPay: 2160,
+    shiftType: 'Swing Shift',
+    startTime: '15:00',
+    endTime: '23:00',
+    date: '2026-08-10',
+    durationHours: 8,
+    pgyRequirement: [],
+    requiredDocIds: [],
+    description: 'Example job -- not a real posting.',
+    malpracticeIncluded: true,
+    restCallRoomAvailable: true,
+    mealStipend: true,
+    urgency: 'Standard',
+    spotsAvailable: 2,
+  },
+  {
+    id: 'example_shift_2',
+    hospitalId: 'example_site',
+    hospitalName: EXAMPLE_SITE_NAME,
+    facilityLocation: '400 Sunview Blvd, Van Nuys, CA',
+    lat: 34.1867,
+    lng: -118.4487,
+    distanceMiles: 12,
+    specialty: 'Emergency Medicine',
+    title: 'Night ED Coverage (Example)',
+    department: 'Emergency Department',
+    hourlyRate: 190,
+    totalPay: 1520,
+    shiftType: 'Night Shift',
+    startTime: '19:00',
+    endTime: '07:00',
+    date: '2026-08-15',
+    durationHours: 8,
+    pgyRequirement: [],
+    requiredDocIds: [],
+    description: 'Example job -- not a real posting.',
+    malpracticeIncluded: true,
+    restCallRoomAvailable: true,
+    mealStipend: true,
+    urgency: 'Standard',
+    spotsAvailable: 1,
+  },
+  {
+    id: 'example_shift_3',
+    hospitalId: 'example_site',
+    hospitalName: EXAMPLE_SITE_NAME,
+    facilityLocation: '400 Sunview Blvd, Van Nuys, CA',
+    lat: 34.1867,
+    lng: -118.4487,
+    distanceMiles: 12,
+    specialty: 'Internal Medicine',
+    title: 'ICU Overnight Coverage (Example)',
+    department: 'ICU',
+    hourlyRate: 200,
+    totalPay: 2400,
+    shiftType: 'Night Shift',
+    startTime: '19:00',
+    endTime: '07:00',
+    date: '2026-08-25',
+    durationHours: 12,
+    pgyRequirement: [],
+    requiredDocIds: [],
+    description: 'Example job -- not yet paired with a resident.',
+    malpracticeIncluded: true,
+    restCallRoomAvailable: true,
+    mealStipend: true,
+    urgency: 'High Demand',
+    spotsAvailable: 1,
+  },
+];
+
+// A minimal stand-in for SiteInterestThread -- just enough to render a Past
+// Jobs row and toggle completion locally in component state. No hospitalId/
+// hospitalOwnerId/etc. because this never round-trips through Supabase.
+interface ExamplePastJob {
+  id: string;
+  shiftId: string;
+  residentName: string;
+  residentProgram: string;
+  completed: boolean;
+}
+
+const INITIAL_EXAMPLE_PAST_JOBS: ExamplePastJob[] = [
+  { id: 'example_pj_1', shiftId: 'example_shift_1', residentName: 'Dr. Amelia Chen (Example)', residentProgram: 'UCLA Emergency Medicine', completed: true },
+  { id: 'example_pj_2', shiftId: 'example_shift_1', residentName: 'Dr. Sara Kim (Example)', residentProgram: 'USC Family Medicine', completed: false },
+  { id: 'example_pj_3', shiftId: 'example_shift_2', residentName: 'Dr. Marcus Webb (Example)', residentProgram: 'USC Internal Medicine', completed: false },
+];
+
 interface HospitalPortalProps {
   onBack: () => void;
 }
@@ -158,11 +273,15 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
 
   // Job postings
   const [shifts, setShifts] = useState<MoonlightingShift[]>([]);
-  // Jobs tab has two ways to look at the same data: a flat list (grouped by
-  // job, with the Past Jobs completion tracking below) or a month calendar
-  // showing both completed shifts (verified/unverified) and open jobs that
-  // still need a resident, laid out by date.
-  const [jobsViewMode, setJobsViewMode] = useState<'list' | 'calendar'>('list');
+  // Jobs tab has three ways to look at the same data: a flat list for
+  // managing postings, a Past Jobs roster split into Unverified/Verified,
+  // and a month calendar showing completed shifts (verified/unverified) and
+  // open jobs that still need a resident, laid out by date.
+  const [jobsViewMode, setJobsViewMode] = useState<'list' | 'pastJobs' | 'calendar'>('list');
+  // Local-only completion state for the example Past Jobs -- see
+  // EXAMPLE_SHIFTS/INITIAL_EXAMPLE_PAST_JOBS above for why these are never
+  // sent to Supabase.
+  const [examplePastJobs, setExamplePastJobs] = useState<ExamplePastJob[]>(INITIAL_EXAMPLE_PAST_JOBS);
   // Months away from the current month the calendar is showing -- 0 is this
   // month, negative goes back, positive goes forward. Recomputed against
   // "today" on every render rather than storing a Date, so navigating never
@@ -386,6 +505,12 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
     } finally {
       setTogglingCompletedId(null);
     }
+  };
+
+  // Same toggle, but for an EXAMPLE past job -- purely local state, no
+  // Supabase call, since example_pj_* ids don't exist in the database.
+  const handleToggleExampleCompleted = (id: string) => {
+    setExamplePastJobs((prev) => prev.map((e) => (e.id === id ? { ...e, completed: !e.completed } : e)));
   };
 
   // Toggle a standard passport document on/off for a job's requirements.
@@ -817,11 +942,12 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
               </button>
             </div>
 
-            {/* List vs. Calendar -- same underlying jobs/interests data,
-                two ways to look at it. Calendar lays completed shifts
-                (verified/unverified) and still-unfilled postings out by
-                date so an MSO can scan a month at a glance. */}
-            <div className="flex mb-5 bg-slate-100 rounded-xl p-1 max-w-[220px]">
+            {/* List / Past Jobs / Calendar -- same underlying jobs/interests
+                data, three ways to look at it. List manages postings; Past
+                Jobs is the Unverified/Verified completion roster; Calendar
+                lays everything out by date so an MSO can scan a month at a
+                glance. */}
+            <div className="flex mb-5 bg-slate-100 rounded-xl p-1 max-w-[320px]">
               <button
                 onClick={() => setJobsViewMode('list')}
                 className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center justify-center space-x-1.5 ${
@@ -830,6 +956,15 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
               >
                 <ListIcon className="w-3.5 h-3.5" />
                 <span>List</span>
+              </button>
+              <button
+                onClick={() => setJobsViewMode('pastJobs')}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center justify-center space-x-1.5 ${
+                  jobsViewMode === 'pastJobs' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'
+                }`}
+              >
+                <History className="w-3.5 h-3.5" />
+                <span>Past Jobs</span>
               </button>
               <button
                 onClick={() => setJobsViewMode('calendar')}
@@ -1084,106 +1219,6 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
                         </div>
                       </div>
 
-                      {/* Past Jobs -- which residents have connected to this
-                          specific posting, split into Unverified (awaiting
-                          the hospital's manual sign-off) and Verified
-                          (confirmed as actually worked) so a busy MSO can
-                          track completion at a glance. The toggle works both
-                          ways -- clicking a Verified entry moves it back to
-                          Unverified, exactly like the existing "Verified"
-                          credentialing sign-off elsewhere in this portal. */}
-                      <div className="px-4 pb-4">
-                        <div className="pt-3 border-t border-slate-100">
-                          <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5 mb-2">
-                            <History className="w-3.5 h-3.5 text-slate-400" />
-                            <span>Past Jobs</span>
-                          </p>
-                          {(() => {
-                            const connected = interests.filter((t) => t.shiftId === shift.id);
-                            if (connected.length === 0) {
-                              return (
-                                <p className="text-[11px] text-slate-400">No residents connected to this job yet.</p>
-                              );
-                            }
-
-                            const unverified = connected.filter((t) => !t.completed);
-                            const verified = connected.filter((t) => t.completed);
-
-                            const renderRow = (thread: SiteInterestThread) => (
-                              <div
-                                key={thread.id}
-                                className="flex items-center justify-between gap-3 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl"
-                              >
-                                <div className="min-w-0">
-                                  <p className="text-xs font-bold text-slate-800 truncate">
-                                    {thread.residentName}
-                                    {thread.residentProgram && (
-                                      <span className="text-slate-400 font-medium"> · {thread.residentProgram}</span>
-                                    )}
-                                  </p>
-                                  <p className="text-[11px] text-slate-500 truncate">{shift.date}</p>
-                                </div>
-
-                                {thread.completed ? (
-                                  <button
-                                    onClick={() => handleToggleCompleted(thread)}
-                                    disabled={togglingCompletedId === thread.id}
-                                    title="Click to move back to Unverified"
-                                    className="shrink-0 flex items-center space-x-1 px-2.5 py-1.5 bg-emerald-50 hover:bg-white border border-emerald-200 hover:border-slate-200 text-emerald-700 hover:text-slate-600 text-[10px] font-bold rounded-lg cursor-pointer disabled:opacity-50 transition-colors"
-                                  >
-                                    {togglingCompletedId === thread.id ? (
-                                      <Loader2 className="w-3 h-3 animate-spin" />
-                                    ) : (
-                                      <CheckCircle2 className="w-3 h-3" />
-                                    )}
-                                    <span>Verified</span>
-                                  </button>
-                                ) : (
-                                  <button
-                                    onClick={() => handleToggleCompleted(thread)}
-                                    disabled={togglingCompletedId === thread.id}
-                                    title="Click to move to Verified"
-                                    className="shrink-0 flex items-center space-x-1 px-2.5 py-1.5 bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-slate-600 hover:text-emerald-700 text-[10px] font-bold rounded-lg cursor-pointer disabled:opacity-50 transition-colors"
-                                  >
-                                    {togglingCompletedId === thread.id ? (
-                                      <Loader2 className="w-3 h-3 animate-spin" />
-                                    ) : (
-                                      <ClipboardCheck className="w-3 h-3" />
-                                    )}
-                                    <span>Verify</span>
-                                  </button>
-                                )}
-                              </div>
-                            );
-
-                            return (
-                              <div className="space-y-3">
-                                <div>
-                                  <p className="text-[9px] font-extrabold uppercase tracking-wider text-amber-600 mb-1.5">
-                                    Unverified ({unverified.length})
-                                  </p>
-                                  {unverified.length === 0 ? (
-                                    <p className="text-[11px] text-slate-400">Nothing awaiting verification.</p>
-                                  ) : (
-                                    <div className="space-y-1.5">{unverified.map(renderRow)}</div>
-                                  )}
-                                </div>
-                                <div>
-                                  <p className="text-[9px] font-extrabold uppercase tracking-wider text-emerald-600 mb-1.5">
-                                    Verified ({verified.length})
-                                  </p>
-                                  {verified.length === 0 ? (
-                                    <p className="text-[11px] text-slate-400">No verified completions yet.</p>
-                                  ) : (
-                                    <div className="space-y-1.5">{verified.map(renderRow)}</div>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })()}
-                        </div>
-                      </div>
-
                       {isExpanded && (
                         <div className="border-t border-slate-100 bg-slate-50/70 p-4 space-y-4">
                           <div>
@@ -1305,6 +1340,152 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
             </>
             )}
 
+            {jobsViewMode === 'pastJobs' && (() => {
+              // Unify real site_interests threads and the local-only example
+              // rows into one shape so they can be sorted/grouped together.
+              // isExample is what routes the Verify click to the right
+              // handler (real Supabase update vs. local-only state) and
+              // what puts the "(Example)" tag on a row.
+              type Row = {
+                id: string;
+                residentName: string;
+                residentProgram?: string;
+                completed: boolean;
+                shiftTitle: string;
+                shiftDate: string;
+                siteName: string;
+                isExample: boolean;
+                sourceThread?: SiteInterestThread;
+              };
+
+              const realRows: Row[] = interests
+                .filter((t) => t.shiftId)
+                .map((t) => {
+                  const shift = shifts.find((s) => s.id === t.shiftId);
+                  return {
+                    id: t.id,
+                    residentName: t.residentName,
+                    residentProgram: t.residentProgram,
+                    completed: t.completed,
+                    shiftTitle: shift?.title || t.shiftTitle || 'Job',
+                    shiftDate: shift?.date || '',
+                    siteName: t.hospitalName,
+                    isExample: false,
+                    sourceThread: t,
+                  };
+                });
+
+              const exampleRows: Row[] = examplePastJobs.map((e) => {
+                const shift = EXAMPLE_SHIFTS.find((s) => s.id === e.shiftId);
+                return {
+                  id: e.id,
+                  residentName: e.residentName,
+                  residentProgram: e.residentProgram,
+                  completed: e.completed,
+                  shiftTitle: shift?.title || 'Example Job',
+                  shiftDate: shift?.date || '',
+                  siteName: EXAMPLE_SITE_NAME,
+                  isExample: true,
+                };
+              });
+
+              const allRows = [...realRows, ...exampleRows].sort((a, b) => b.shiftDate.localeCompare(a.shiftDate));
+              const unverifiedRows = allRows.filter((r) => !r.completed);
+              const verifiedRows = allRows.filter((r) => r.completed);
+
+              const renderRow = (row: Row) => (
+                <div
+                  key={row.id}
+                  className={`flex items-center justify-between gap-3 px-4 py-3 border rounded-2xl ${
+                    row.isExample ? 'bg-slate-50/60 border-dashed border-slate-300' : 'bg-white border-slate-200'
+                  }`}
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-bold text-slate-900 truncate">{row.residentName}</p>
+                      {row.isExample && (
+                        <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded-md">
+                          Example
+                        </span>
+                      )}
+                    </div>
+                    {row.residentProgram && (
+                      <p className="text-xs text-slate-500 truncate">{row.residentProgram}</p>
+                    )}
+                    <p className="text-[11px] text-slate-400 mt-1 truncate">
+                      {row.shiftTitle} · {row.siteName} · {row.shiftDate}
+                    </p>
+                  </div>
+
+                  {row.completed ? (
+                    <button
+                      onClick={() =>
+                        row.isExample ? handleToggleExampleCompleted(row.id) : handleToggleCompleted(row.sourceThread!)
+                      }
+                      disabled={!row.isExample && togglingCompletedId === row.id}
+                      title="Click to move back to Unverified"
+                      className="shrink-0 flex items-center space-x-1 px-3 py-1.5 bg-emerald-50 hover:bg-white border border-emerald-200 hover:border-slate-200 text-emerald-700 hover:text-slate-600 text-xs font-bold rounded-lg cursor-pointer disabled:opacity-50 transition-colors"
+                    >
+                      {!row.isExample && togglingCompletedId === row.id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      )}
+                      <span>Verified</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() =>
+                        row.isExample ? handleToggleExampleCompleted(row.id) : handleToggleCompleted(row.sourceThread!)
+                      }
+                      disabled={!row.isExample && togglingCompletedId === row.id}
+                      title="Click to move to Verified"
+                      className="shrink-0 flex items-center space-x-1 px-3 py-1.5 bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-slate-600 hover:text-emerald-700 text-xs font-bold rounded-lg cursor-pointer disabled:opacity-50 transition-colors"
+                    >
+                      {!row.isExample && togglingCompletedId === row.id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <ClipboardCheck className="w-3.5 h-3.5" />
+                      )}
+                      <span>Verify</span>
+                    </button>
+                  )}
+                </div>
+              );
+
+              return (
+                <div className="space-y-6">
+                  <p className="text-xs font-semibold text-slate-500 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                    A few rows below are marked <strong>Example</strong> -- fake, local-only data so you can see how this
+                    tab behaves before you've posted a real job or a resident has connected to one. They're never saved
+                    to your account and never shown to residents.
+                  </p>
+
+                  <div>
+                    <p className="text-[11px] font-extrabold uppercase tracking-wider text-amber-600 mb-2.5">
+                      Unverified ({unverifiedRows.length})
+                    </p>
+                    {unverifiedRows.length === 0 ? (
+                      <p className="text-xs text-slate-400">Nothing awaiting verification.</p>
+                    ) : (
+                      <div className="space-y-2">{unverifiedRows.map(renderRow)}</div>
+                    )}
+                  </div>
+
+                  <div>
+                    <p className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-600 mb-2.5">
+                      Verified ({verifiedRows.length})
+                    </p>
+                    {verifiedRows.length === 0 ? (
+                      <p className="text-xs text-slate-400">No verified completions yet.</p>
+                    ) : (
+                      <div className="space-y-2">{verifiedRows.map(renderRow)}</div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
             {jobsViewMode === 'calendar' && (() => {
               // Recomputed against "today" each render (rather than storing
               // a Date in state) so navigating months never drifts.
@@ -1323,6 +1504,11 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
               for (let i = 0; i < firstDayOfWeek; i++) cells.push(null);
               for (let d = 1; d <= daysInMonth; d++) cells.push(d);
               while (cells.length % 7 !== 0) cells.push(null);
+
+              // Real postings plus the local-only EXAMPLE_SHIFTS, so the
+              // calendar shows what a populated month looks like even
+              // before any real job has been posted.
+              const calendarShifts = [...shifts, ...EXAMPLE_SHIFTS];
 
               return (
                 <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
@@ -1368,7 +1554,7 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
                         return <div key={idx} className="min-h-[92px] border-b border-r border-slate-100 bg-slate-50/40" />;
                       }
                       const cellIso = toIso(day);
-                      const dayShifts = shifts.filter((s) => s.date === cellIso);
+                      const dayShifts = calendarShifts.filter((s) => s.date === cellIso);
                       return (
                         <div
                           key={idx}
@@ -1381,7 +1567,10 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
                           </p>
                           <div className="space-y-1">
                             {dayShifts.map((s) => {
-                              const connections = interests.filter((t) => t.shiftId === s.id);
+                              const isExampleShift = s.id.startsWith('example_');
+                              const connections = isExampleShift
+                                ? examplePastJobs.filter((e) => e.shiftId === s.id)
+                                : interests.filter((t) => t.shiftId === s.id);
                               const needsResident = connections.length === 0;
                               const allVerified = connections.length > 0 && connections.every((t) => t.completed);
                               const chipClass = needsResident
