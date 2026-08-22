@@ -26,6 +26,11 @@ import {
   Search,
   History,
   ClipboardCheck,
+  ChevronLeft,
+  ChevronRight,
+  CalendarDays,
+  UserPlus,
+  List as ListIcon,
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { resendSignUpCode, signOutResident, getCurrentSession } from '../lib/residentApi';
@@ -153,6 +158,16 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
 
   // Job postings
   const [shifts, setShifts] = useState<MoonlightingShift[]>([]);
+  // Jobs tab has two ways to look at the same data: a flat list (grouped by
+  // job, with the Past Jobs completion tracking below) or a month calendar
+  // showing both completed shifts (verified/unverified) and open jobs that
+  // still need a resident, laid out by date.
+  const [jobsViewMode, setJobsViewMode] = useState<'list' | 'calendar'>('list');
+  // Months away from the current month the calendar is showing -- 0 is this
+  // month, negative goes back, positive goes forward. Recomputed against
+  // "today" on every render rather than storing a Date, so navigating never
+  // drifts.
+  const [calendarMonthOffset, setCalendarMonthOffset] = useState(0);
   const [showPostJob, setShowPostJob] = useState(false);
   const [isSavingJob, setIsSavingJob] = useState(false);
   const [jobError, setJobError] = useState<string | null>(null);
@@ -802,6 +817,33 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
               </button>
             </div>
 
+            {/* List vs. Calendar -- same underlying jobs/interests data,
+                two ways to look at it. Calendar lays completed shifts
+                (verified/unverified) and still-unfilled postings out by
+                date so an MSO can scan a month at a glance. */}
+            <div className="flex mb-5 bg-slate-100 rounded-xl p-1 max-w-[220px]">
+              <button
+                onClick={() => setJobsViewMode('list')}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center justify-center space-x-1.5 ${
+                  jobsViewMode === 'list' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'
+                }`}
+              >
+                <ListIcon className="w-3.5 h-3.5" />
+                <span>List</span>
+              </button>
+              <button
+                onClick={() => setJobsViewMode('calendar')}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center justify-center space-x-1.5 ${
+                  jobsViewMode === 'calendar' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'
+                }`}
+              >
+                <CalendarDays className="w-3.5 h-3.5" />
+                <span>Calendar</span>
+              </button>
+            </div>
+
+            {jobsViewMode === 'list' && (
+            <>
             {sites.length === 0 && (
               <p className="text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-4">
                 Add a site under "Your Sites" first -- jobs are posted for a specific facility.
@@ -1043,10 +1085,13 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
                       </div>
 
                       {/* Past Jobs -- which residents have connected to this
-                          specific posting, and a manual, hospital-side
-                          sign-off that they actually worked it. Deliberately
-                          never flipped automatically, matching how the
-                          "Verified" credentialing sign-off already works. */}
+                          specific posting, split into Unverified (awaiting
+                          the hospital's manual sign-off) and Verified
+                          (confirmed as actually worked) so a busy MSO can
+                          track completion at a glance. The toggle works both
+                          ways -- clicking a Verified entry moves it back to
+                          Unverified, exactly like the existing "Verified"
+                          credentialing sign-off elsewhere in this portal. */}
                       <div className="px-4 pb-4">
                         <div className="pt-3 border-t border-slate-100">
                           <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5 mb-2">
@@ -1060,44 +1105,79 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
                                 <p className="text-[11px] text-slate-400">No residents connected to this job yet.</p>
                               );
                             }
-                            return (
-                              <div className="space-y-1.5">
-                                {connected.map((thread) => (
-                                  <div
-                                    key={thread.id}
-                                    className="flex items-center justify-between gap-3 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl"
-                                  >
-                                    <div className="min-w-0">
-                                      <p className="text-xs font-bold text-slate-800 truncate">
-                                        {thread.residentName}
-                                        {thread.residentProgram && (
-                                          <span className="text-slate-400 font-medium"> · {thread.residentProgram}</span>
-                                        )}
-                                      </p>
-                                      <p className="text-[11px] text-slate-500 truncate">{shift.date}</p>
-                                    </div>
 
-                                    {thread.completed ? (
-                                      <span className="shrink-0 flex items-center space-x-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg">
-                                        <CheckCircle2 className="w-3 h-3" />
-                                        <span>Completed</span>
-                                      </span>
-                                    ) : (
-                                      <button
-                                        onClick={() => handleToggleCompleted(thread)}
-                                        disabled={togglingCompletedId === thread.id}
-                                        className="shrink-0 flex items-center space-x-1 px-2.5 py-1.5 bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-slate-600 hover:text-emerald-700 text-[10px] font-bold rounded-lg cursor-pointer disabled:opacity-50 transition-colors"
-                                      >
-                                        {togglingCompletedId === thread.id ? (
-                                          <Loader2 className="w-3 h-3 animate-spin" />
-                                        ) : (
-                                          <ClipboardCheck className="w-3 h-3" />
-                                        )}
-                                        <span>Verify Completion</span>
-                                      </button>
+                            const unverified = connected.filter((t) => !t.completed);
+                            const verified = connected.filter((t) => t.completed);
+
+                            const renderRow = (thread: SiteInterestThread) => (
+                              <div
+                                key={thread.id}
+                                className="flex items-center justify-between gap-3 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl"
+                              >
+                                <div className="min-w-0">
+                                  <p className="text-xs font-bold text-slate-800 truncate">
+                                    {thread.residentName}
+                                    {thread.residentProgram && (
+                                      <span className="text-slate-400 font-medium"> · {thread.residentProgram}</span>
                                     )}
-                                  </div>
-                                ))}
+                                  </p>
+                                  <p className="text-[11px] text-slate-500 truncate">{shift.date}</p>
+                                </div>
+
+                                {thread.completed ? (
+                                  <button
+                                    onClick={() => handleToggleCompleted(thread)}
+                                    disabled={togglingCompletedId === thread.id}
+                                    title="Click to move back to Unverified"
+                                    className="shrink-0 flex items-center space-x-1 px-2.5 py-1.5 bg-emerald-50 hover:bg-white border border-emerald-200 hover:border-slate-200 text-emerald-700 hover:text-slate-600 text-[10px] font-bold rounded-lg cursor-pointer disabled:opacity-50 transition-colors"
+                                  >
+                                    {togglingCompletedId === thread.id ? (
+                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                    ) : (
+                                      <CheckCircle2 className="w-3 h-3" />
+                                    )}
+                                    <span>Verified</span>
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleToggleCompleted(thread)}
+                                    disabled={togglingCompletedId === thread.id}
+                                    title="Click to move to Verified"
+                                    className="shrink-0 flex items-center space-x-1 px-2.5 py-1.5 bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-slate-600 hover:text-emerald-700 text-[10px] font-bold rounded-lg cursor-pointer disabled:opacity-50 transition-colors"
+                                  >
+                                    {togglingCompletedId === thread.id ? (
+                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                    ) : (
+                                      <ClipboardCheck className="w-3 h-3" />
+                                    )}
+                                    <span>Verify</span>
+                                  </button>
+                                )}
+                              </div>
+                            );
+
+                            return (
+                              <div className="space-y-3">
+                                <div>
+                                  <p className="text-[9px] font-extrabold uppercase tracking-wider text-amber-600 mb-1.5">
+                                    Unverified ({unverified.length})
+                                  </p>
+                                  {unverified.length === 0 ? (
+                                    <p className="text-[11px] text-slate-400">Nothing awaiting verification.</p>
+                                  ) : (
+                                    <div className="space-y-1.5">{unverified.map(renderRow)}</div>
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="text-[9px] font-extrabold uppercase tracking-wider text-emerald-600 mb-1.5">
+                                    Verified ({verified.length})
+                                  </p>
+                                  {verified.length === 0 ? (
+                                    <p className="text-[11px] text-slate-400">No verified completions yet.</p>
+                                  ) : (
+                                    <div className="space-y-1.5">{verified.map(renderRow)}</div>
+                                  )}
+                                </div>
                               </div>
                             );
                           })()}
@@ -1222,6 +1302,135 @@ export const HospitalPortal: React.FC<HospitalPortalProps> = ({ onBack }) => {
                 })}
               </div>
             )}
+            </>
+            )}
+
+            {jobsViewMode === 'calendar' && (() => {
+              // Recomputed against "today" each render (rather than storing
+              // a Date in state) so navigating months never drifts.
+              const base = new Date();
+              base.setDate(1);
+              base.setMonth(base.getMonth() + calendarMonthOffset);
+              const year = base.getFullYear();
+              const monthIndex = base.getMonth();
+              const monthLabel = base.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+              const firstDayOfWeek = new Date(year, monthIndex, 1).getDay();
+              const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+              const toIso = (d: number) => `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+              const todayIso = new Date().toISOString().slice(0, 10);
+
+              const cells: (number | null)[] = [];
+              for (let i = 0; i < firstDayOfWeek; i++) cells.push(null);
+              for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+              while (cells.length % 7 !== 0) cells.push(null);
+
+              return (
+                <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+                    <button
+                      onClick={() => setCalendarMonthOffset((prev) => prev - 1)}
+                      className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg cursor-pointer"
+                      title="Previous month"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <div className="flex items-center space-x-2">
+                      <h3 className="text-sm font-bold text-slate-900">{monthLabel}</h3>
+                      {calendarMonthOffset !== 0 && (
+                        <button
+                          onClick={() => setCalendarMonthOffset(0)}
+                          className="text-[10px] font-bold text-blue-600 hover:text-blue-800 cursor-pointer"
+                        >
+                          Today
+                        </button>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => setCalendarMonthOffset((prev) => prev + 1)}
+                      className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg cursor-pointer"
+                      title="Next month"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-7 text-center border-b border-slate-100">
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
+                      <div key={d} className="py-2 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                        {d}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-7">
+                    {cells.map((day, idx) => {
+                      if (day === null) {
+                        return <div key={idx} className="min-h-[92px] border-b border-r border-slate-100 bg-slate-50/40" />;
+                      }
+                      const cellIso = toIso(day);
+                      const dayShifts = shifts.filter((s) => s.date === cellIso);
+                      return (
+                        <div
+                          key={idx}
+                          className={`min-h-[92px] border-b border-r border-slate-100 p-1.5 ${
+                            cellIso === todayIso ? 'bg-blue-50/60' : ''
+                          }`}
+                        >
+                          <p className={`text-[10px] font-bold mb-1 ${cellIso === todayIso ? 'text-blue-700' : 'text-slate-400'}`}>
+                            {day}
+                          </p>
+                          <div className="space-y-1">
+                            {dayShifts.map((s) => {
+                              const connections = interests.filter((t) => t.shiftId === s.id);
+                              const needsResident = connections.length === 0;
+                              const allVerified = connections.length > 0 && connections.every((t) => t.completed);
+                              const chipClass = needsResident
+                                ? 'border-dashed border-slate-300 text-slate-500 bg-slate-50'
+                                : allVerified
+                                ? 'border-emerald-200 text-emerald-800 bg-emerald-50'
+                                : 'border-amber-200 text-amber-800 bg-amber-50';
+                              return (
+                                <div
+                                  key={s.id}
+                                  title={
+                                    needsResident
+                                      ? `${s.title} -- needs a resident`
+                                      : `${s.title} -- ${connections.filter((t) => t.completed).length}/${connections.length} verified`
+                                  }
+                                  className={`flex items-center gap-1 px-1.5 py-1 rounded-md border text-[9px] font-bold truncate ${chipClass}`}
+                                >
+                                  {needsResident ? (
+                                    <UserPlus className="w-2.5 h-2.5 shrink-0" />
+                                  ) : (
+                                    <CheckCircle2 className="w-2.5 h-2.5 shrink-0" />
+                                  )}
+                                  <span className="truncate">{s.title}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex items-center flex-wrap gap-x-4 gap-y-1.5 px-4 py-3 border-t border-slate-100 text-[10px] font-semibold text-slate-500">
+                    <span className="flex items-center space-x-1.5">
+                      <span className="w-2.5 h-2.5 rounded-sm bg-slate-50 border border-dashed border-slate-300 inline-block" />
+                      <span>Needs a resident</span>
+                    </span>
+                    <span className="flex items-center space-x-1.5">
+                      <span className="w-2.5 h-2.5 rounded-sm bg-amber-50 border border-amber-200 inline-block" />
+                      <span>Unverified completion</span>
+                    </span>
+                    <span className="flex items-center space-x-1.5">
+                      <span className="w-2.5 h-2.5 rounded-sm bg-emerald-50 border border-emerald-200 inline-block" />
+                      <span>Verified completion</span>
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
           </>
         ) : dashboardView === 'candidates' ? (
           <div className="flex gap-4 h-[calc(100vh-260px)] min-h-[560px]">
