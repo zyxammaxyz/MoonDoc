@@ -25,6 +25,12 @@ export interface SiteInterestThread {
   // Hospital admin's manual sign-off that this candidate has satisfied every
   // requirement for the job -- never set automatically by document uploads.
   verified: boolean;
+  // Hospital admin's manual confirmation that this resident actually worked
+  // the shift -- separate from `verified` above (which is a pre-shift
+  // credentialing sign-off). Also never set automatically. This is what
+  // powers each site's "Past Jobs" track record of who worked it and when.
+  completed: boolean;
+  completedAt?: string;
   createdAt: string;
 }
 
@@ -41,6 +47,8 @@ function threadRowToType(row: any): SiteInterestThread {
     shiftId: row.shift_id || undefined,
     shiftTitle: row.shift_title || undefined,
     verified: !!row.verified,
+    completed: !!row.completed,
+    completedAt: row.completed_at || undefined,
     createdAt: row.created_at,
   };
 }
@@ -307,5 +315,19 @@ export async function markThreadSeen(threadId: string): Promise<void> {
  */
 export async function markThreadVerified(threadId: string, verified: boolean): Promise<void> {
   const { error } = await supabase.from('site_interests').update({ verified }).eq('id', threadId);
+  if (error) throw error;
+}
+
+/**
+ * Hospital admin's manual confirmation (or reversal) that a resident
+ * actually worked this shift -- what builds each site's real "Past Jobs"
+ * track record. Deliberately separate from `verified` above and, like it,
+ * never flipped automatically.
+ */
+export async function markThreadCompleted(threadId: string, completed: boolean): Promise<void> {
+  const { error } = await supabase
+    .from('site_interests')
+    .update({ completed, completed_at: completed ? new Date().toISOString() : null })
+    .eq('id', threadId);
   if (error) throw error;
 }
